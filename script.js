@@ -355,8 +355,6 @@ function renderTable() {
     filtered = filtered.filter((p) => p.starred);
   }
 
-  // 2) SORT (starred on top)
-  filtered.sort((a, b) => (b.starred === true) - (a.starred === true));
 
   // 3) PAGINATION CALC
   const totalItems = filtered.length;
