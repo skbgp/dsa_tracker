@@ -1,0 +1,457 @@
+/* Makes padding & borders count inside element width */
+* {
+  box-sizing: border-box;
+}
+
+/* Main page base styling */
+body {
+  font-family: Arial, sans-serif;     /* Clean, readable default font */
+  background: #f5f5f5;                /* Light gray app background */
+  margin: 0;                          /* Remove browser default margin */
+  padding: 16px;                      /* Space from edges */
+  display: flex;                      /* Enables vertical layout */
+  flex-direction: column;             /* Stack sections vertically */
+  align-items: center;                /* Center the app horizontally */
+  min-height: 100vh;                  /* Full screen height */
+}
+
+/* App main heading */
+.app-title {
+  text-align: center;                 /* Center title text */
+  margin-bottom: 16px;                /* Space below heading */
+}
+
+/* Shared card UI for auth + main app */
+#auth-section,
+#app-section {
+  width: 100%;                        /* Fill available width */
+  max-width: 1000px;                 /* Prevent over-stretching on large screens */
+  background: white;                 /* Card-style background */
+  padding: 20px;                     /* Inner spacing */
+  border-radius: 10px;               /* Rounded corners */
+  margin-bottom: 20px;               /* Space between cards */
+}
+
+/* Center-only auth section */
+#auth-section {
+  text-align: center;
+}
+
+/* Global button base styling */
+button {
+  padding: 8px 14px;                 /* Button inner spacing */
+  border: none;                      /* Remove browser outline */
+  border-radius: 6px;                /* Rounded corners */
+  cursor: pointer;                  /* Hand cursor on hover */
+}
+
+/* Success / primary action button */
+.primary-btn {
+  background: #2ecc71;
+  color: white;
+}
+
+/* Neutral secondary buttons */
+.secondary-btn {
+  background: #e0e0e0;
+}
+
+/* Dangerous actions like logout / delete */
+.danger-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+/* Google login button */
+.google-btn {
+  background: #4285f4;
+  color: white;
+  font-size: 16px;
+  padding: 12px 22px;
+}
+
+/* Top bar containing Sort, Add, Logout */
+.top-bar {
+  display: flex;                     /* Horizontal alignment */
+  align-items: center;              /* Vertical centering */
+  justify-content: space-between;   /* Left buttons + right logout */
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+/* Left & right button groups */
+.top-left,
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;                /* Prevent wrapping to next line */
+}
+
+/* Force all top-bar buttons to same size */
+.top-bar button {
+  height: 42px;
+  font-size: 15px;
+  padding: 0 18px;
+  white-space: nowrap;              /* Prevent multi-line buttons */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Specific logout button cleanup */
+#logoutBtn {
+  height: 42px;
+  padding: 0 20px;
+}
+
+/* Main table width control */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Table cell styling */
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+/* Star column center alignment */
+.star-cell {
+  text-align: center;
+}
+
+/* Pagination layout */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Footer styling */
+.app-footer {
+  margin-top: auto;                 /* Push footer to bottom */
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+/* ========== NOTE MODAL (POPUP) ========== */
+
+.note-modal {
+  position: fixed;                  /* Overlay on entire screen */
+  inset: 0;                         /* Cover full viewport */
+  background: rgba(0, 0, 0, 0.5);   /* Dim background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;                    /* Always above everything */
+}
+
+/* Note popup container */
+.note-modal-content {
+  background: white;
+  padding: 28px;
+  width: 95%;
+  max-width: 800px;
+  border-radius: 14px;
+  max-height: 85vh;
+  overflow-y: auto;                /* Scroll if long note */
+  text-align: left;
+}
+
+/* Note heading styling */
+.note-modal-content h3 {
+  margin-top: -8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Center close button */
+.note-modal-content button {
+  display: block;
+  margin: 20px auto 0 auto;
+}
+
+/* Dark mode modal support */
+body.dark .note-modal-content {
+  background: #1e1e1e;
+  color: #eee;
+}
+
+/* ========== STAR FAVORITES ========== */
+
+.star-cell button {
+  font-size: 18px;
+  background: transparent;
+}
+
+/* Favorited star */
+.star-cell button.starred {
+  color: gold;
+}
+
+/* Unselected star */
+.star-cell button:not(.starred) {
+  color: #999;
+}
+
+/* ========== ADD / EDIT FORM ========== */
+
+#problemForm {
+  margin-top: 20px;
+  padding: 18px 22px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Form heading */
+#problemForm h3 {
+  margin: 0 0 14px 0;
+  font-size: 22px;
+}
+
+/* Main inputs stacked vertically */
+#problemForm > input,
+#problemForm > select,
+#problemForm > textarea {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* Textarea resize control */
+#problemForm > textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* Practice link row (input + button inline) */
+#problemForm > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 500px;
+  margin-top: 4px;
+}
+
+/* Practice input field */
+#practiceLinkInput {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* ===== FILTER PANEL BEAUTIFICATION ===== */
+
+#sortPanel{
+  margin-top: 14px;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  max-width: 500px;
+}
+
+/* search input */
+#filterTag{
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* starred checkbox row */
+.filter-star-row{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+/* Apply / Reset buttons */
+#sortPanel button{
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-right: 6px;
+}
+
+#prevPageBtn span {
+  margin-right: 6px;
+}
+
+#nextPageBtn span {
+  margin-right: 6px;
+}
+
+/* tag suggestions dropdown */
+#tagSuggestionsBox{
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* individual suggestion item */
+#tagSuggestionsBox div{
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#tagSuggestionsBox div:hover{
+  background: #f0f0f0;
+}
+/* ===== PAGINATION ALIGNMENT FIX ===== */
+
+#paginationControls {
+  display: flex;
+  align-items: center;        /*  vertically align Prev, text, Next */
+  justify-content: center;
+  gap: 14px;
+}
+
+#paginationControls button {
+  height: 42px;               /*  same height as top-bar buttons */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#pageInfo {
+  display: flex;
+  align-items: center;        /*  keep text perfectly centered */
+  font-size: 15px;
+}
+
+
+/* ===== DARK MODE ===== */
+
+body.dark {
+  background: #111;
+  color: #f5f5f5;
+}
+
+/* Main cards in dark mode */
+body.dark #auth-section,
+body.dark #app-section {
+  background: #1e1e1e;
+  color: #f5f5f5;
+  border-color: #333;
+}
+
+/* Table in dark mode */
+body.dark table {
+  border-color: #444;
+}
+
+body.dark th,
+body.dark td {
+  border-color: #444;
+  background: #181818;
+  color: #f5f5f5;
+}
+
+/* Buttons in dark mode keep good contrast */
+body.dark .primary-btn {
+  background: #27ae60;
+}
+
+body.dark .secondary-btn {
+  background: #333;
+  color: #f5f5f5;
+}
+
+body.dark .danger-btn {
+  background: #c0392b;
+}
+
+/* Filter + form cards in dark mode */
+body.dark #problemForm,
+body.dark #sortPanel {
+  background: #181818;
+  border-color: #333;
+}
+
+/* Inputs in dark mode */
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background: #222;
+  color: #f5f5f5;
+  border-color: #555;
+}
+
+/* Tag suggestions dropdown in dark mode */
+body.dark #tagSuggestionsBox {
+  background: #222;
+  border-color: #444;
+}
+
+body.dark #tagSuggestionsBox div:hover {
+  background: #333;
+}
+/* ===== ACTION COLUMN BUTTON ALIGNMENT ===== */
+
+td:last-child {
+  white-space: nowrap;      /* ✅ prevents wrapping to next line */
+}
+
+td:last-child button {
+  margin-right: 6px;        /* ✅ space between Edit & Delete */
+  display: inline-block;
+}
+
+/* ===== DARK MODE LINK VISIBILITY FIX ===== */
+
+body.dark a {
+  color: #4da3ff;          /* bright readable blue */
+  text-decoration: underline;
+}
+
+body.dark a:hover {
+  color: #7fbaff;          /* lighter on hover */
+}
+/* ===== REVISION COLUMN INLINE FIX ===== */
+
+td:nth-child(6) {
+  white-space: nowrap;        /* keep days + lock on one line */
+}
+
+td:nth-child(6) button {
+  margin-left: 6px;          /* space between days and lock */
+  vertical-align: middle;
+}
+/* ===== FORCE GOLD LOCK IN ALL MODES ===== */
+
+td button[disabled] {
+  color: gold !important;     /* always gold, light & dark mode */
+  background: transparent;
+  opacity: 1;                 /* prevent faded disabled look */
+  font-size: 18px;
+  cursor: not-allowed;
+}
+
+body.dark td button[disabled] {
+  color: gold !important;     /* double safety for dark mode */
+}

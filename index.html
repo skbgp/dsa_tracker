@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <title>DSA Tracker</title>
+      <link rel="stylesheet" href="style.css" />
+   </head>
+   <body>
+      <!-- ========= AUTH SECTION ========= -->
+      <div id="auth-section">
+         <h1 class="app-title">📘 DSA Revision & Practice Tracker</h1>
+         <button id="googleBtn" class="google-btn">
+         Sign in with Google
+         </button>
+         <p id="auth-message"></p>
+      </div>
+      <!-- ========= APP SECTION ========= -->
+      <div id="app-section" style="display:none;">
+         <!-- MAIN TITLE INSIDE CARD -->
+         <h1 class="app-title">📘 DSA Revision & Practice Tracker</h1>
+         <!-- SINGLE HEADER ROW -->
+         <div class="top-bar">
+            <div class="top-left">
+               <button id="toggleSortBtn" class="secondary-btn">🔍 Sort &amp; Filter</button>
+               <button id="openAddFormBtn" class="primary-btn">➕ Add Problem</button>
+            </div>
+            <div class="top-right">
+               <p id="welcome-text"></p>
+               <!-- 🌙 Dark Mode Button -->
+               <button id="darkModeToggle" class="secondary-btn">🌙 Dark</button> 
+               <button id="logoutBtn" class="danger-btn">Logout</button>
+            </div>
+         </div>
+         <!-- FILTER PANEL -->
+         <div id="sortPanel" style="display:none; margin:10px 0; position:relative;">
+            <!-- Tag filter + suggestions -->
+            <div style="position:relative;">
+               <input id="filterTag" placeholder="Search tag..." autocomplete="off" />
+               <div id="tagSuggestionsBox"
+                  style="position:absolute; top:100%; left:0; right:0;
+                  display:none; max-height:150px; overflow-y:auto; z-index:200;">
+               </div>
+            </div>
+            <!-- Starred filter -->
+            <div class="filter-star-row">
+               <input type="checkbox" id="starFilterToggle">
+               <span>⭐ Show Starred Only</span>
+            </div>
+            <button id="applyFilterBtn">Apply</button>
+            <button id="resetFilterBtn">Reset</button>
+         </div>
+         <!-- ADD / EDIT FORM -->
+         <div id="problemForm" style="display:none;">
+            <h3>Add / Edit Problem</h3>
+            <input id="problem" placeholder="Problem Name" />
+            <!-- Tags + suggestions for add/edit -->
+            <input id="tags" placeholder="Tags (comma separated)" />
+            <div id="tagInputSuggestionsBox"
+               style="display:none; border:1px solid #ccc; background:#fff;
+               max-height:140px; overflow-y:auto; margin-bottom:8px;"></div>
+            <select id="difficulty">
+               <option value="Easy">Easy</option>
+               <option value="Medium">Medium</option>
+               <option value="Hard">Hard</option>
+            </select>
+            <textarea id="notes" placeholder="Notes"></textarea>
+            <!-- MULTI PRACTICE LINKS -->
+            <div>
+               <input id="practiceLinkInput" placeholder="Paste practice link" />
+               <button type="button" id="addPracticeLinkBtn">Add Link</button>
+               <div id="practiceLinksPreview" style="margin-top:6px;"></div>
+            </div>
+            <br>
+            <button id="saveProblemBtn">Save</button>
+            <button type="button" onclick="closeProblemForm()">Close</button>
+         </div>
+         <!-- TABLE -->
+         <h2>Your Problems</h2>
+         <table>
+            <thead>
+               <tr>
+                  <th>#</th>
+                  <th>Problem</th>
+                  <th>Difficulty</th>
+                  <th>Notes</th>
+                  <th>Tags</th>
+                  <th>Revision</th>
+                  <th>Practice</th>
+                  <th>★</th>
+                  <th>Actions</th>
+               </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+         </table>
+         <!-- PAGINATION -->
+         <div id="paginationControls" class="pagination">
+            <button id="prevPageBtn" class="page-btn">
+            <span class="icon">⬅ </span>
+            <span>Prev</span>
+            </button>
+            <span id="pageInfo"></span>
+            <button id="nextPageBtn" class="page-btn">
+            <span>Next</span>
+            <span class="icon"> ⮕</span>
+            </button>
+         </div>
+      </div>
+      <!-- NOTE MODAL -->
+      <div id="noteModal" class="note-modal" style="display:none;">
+         <div class="note-modal-content">
+            <h3>Note</h3>
+            <p id="noteModalText"></p>
+            <button type="button" onclick="closeNoteModal()">Close</button>
+         </div>
+      </div>
+      <script type="module" src="script.js"></script>
+   </body>
+   <footer class="app-footer">
+      Made with ❤️ by <strong>Shubham</strong>
+   </footer>
+</html>
