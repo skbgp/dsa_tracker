@@ -1,121 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="UTF-8" />
-      <title>DSA Tracker</title>
-      <link rel="stylesheet" href="style.css" />
-   </head>
-   <body>
-      <!-- ========= AUTH SECTION ========= -->
-      <div id="auth-section">
-         <h1 class="app-title">📘 DSA Revision & Practice Tracker</h1>
-         <button id="googleBtn" class="google-btn">
-         Sign in with Google
-         </button>
-         <p id="auth-message"></p>
-      </div>
-      <!-- ========= APP SECTION ========= -->
-      <div id="app-section" style="display:none;">
-         <!-- MAIN TITLE INSIDE CARD -->
-         <h1 class="app-title">📘 DSA Revision & Practice Tracker</h1>
-         <!-- SINGLE HEADER ROW -->
-         <div class="top-bar">
-            <div class="top-left">
-               <button id="toggleSortBtn" class="secondary-btn">🔍 Sort &amp; Filter</button>
-               <button id="openAddFormBtn" class="primary-btn">➕ Add Problem</button>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DSA Tracker & Wiki</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
+</head>
+<body>
+    <div id="auth-section">
+        <h1 class="app-title"><i class="fa-solid fa-book-open"></i> DSA Tracker & Wiki</h1>
+        <button id="googleBtn" class="google-btn">
+            <i class="fa-brands fa-google"></i> Sign in with Google
+        </button>
+        <p id="auth-message"></p>
+    </div>
+
+    <div id="app-section" style="display:none;">
+        
+        <div class="top-header">
+            <div class="nav-tabs">
+                <button id="tabTracker" class="nav-btn active" onclick="switchTab('tracker')">
+                    <i class="fa-solid fa-list-check"></i> Problem Tracker
+                </button>
+                <button id="tabWiki" class="nav-btn" onclick="switchTab('wiki')">
+                    <i class="fa-solid fa-book-atlas"></i> Wiki
+                </button>
             </div>
-            <div class="top-right">
-               <p id="welcome-text"></p>
-               <!-- 🌙 Dark Mode Button -->
-               <button id="darkModeToggle" class="secondary-btn">🌙 Dark</button> 
-               <button id="logoutBtn" class="danger-btn">Logout</button>
+            <div class="user-controls">
+                <span id="welcome-text"></span>
+                <button id="darkModeToggle" class="secondary-btn">
+                    <i class="fa-solid fa-moon"></i> Dark
+                </button> 
+                <button id="logoutBtn" class="danger-btn" style="background:#e74c3c; color:white;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
             </div>
-         </div>
-         <!-- FILTER PANEL -->
-         <div id="sortPanel" style="display:none; margin:10px 0; position:relative;">
-            <!-- Tag filter + suggestions -->
-            <div style="position:relative;">
-               <input id="filterTag" placeholder="Search tag..." autocomplete="off" />
-               <div id="tagSuggestionsBox"
-                  style="position:absolute; top:100%; left:0; right:0;
-                  display:none; max-height:150px; overflow-y:auto; z-index:200;">
-               </div>
+        </div>
+
+        <div id="tracker-view">
+            <div class="tracker-controls">
+                <div class="left-controls">
+                    <button id="toggleSortBtn" class="secondary-btn">
+                        <i class="fa-solid fa-filter"></i> Sort & Filter
+                    </button>
+                    <div id="sortPanel" style="display:none;">
+                        <div class="input-wrapper search-wrapper">
+                            <input id="filterTag" placeholder="Search tag..." autocomplete="off" />
+                            <div id="tagSuggestionsBox" class="suggestions-dropdown"></div>
+                        </div>
+                        <div class="filter-star-row">
+                            <input type="checkbox" id="starFilterToggle">
+                            <label for="starFilterToggle">Starred</label>
+                        </div>
+                        <button id="applyFilterBtn" class="primary-btn small-btn">Apply</button>
+                        <button id="resetFilterBtn" class="secondary-btn small-btn">Reset</button>
+                    </div>
+                </div>
+                
+                <button id="openAddFormBtn" class="primary-btn">
+                    <i class="fa-solid fa-plus"></i> Add Problem
+                </button>
             </div>
-            <!-- Starred filter -->
-            <div class="filter-star-row">
-               <input type="checkbox" id="starFilterToggle">
-               <span>⭐ Show Starred Only</span>
+
+            <div id="problemForm" style="display:none;">
+                <input id="problem" placeholder="Problem Name" />
+                
+                <div class="input-wrapper">
+                    <input id="tags" placeholder="Tags (comma separated)" autocomplete="off" />
+                    <div id="tagInputSuggestionsBox" class="suggestions-dropdown"></div>
+                </div>
+
+                <select id="difficulty">
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+                
+                <div style="margin: 10px 0;">
+                    <label for="monacoEditor">Notes / Code Snippet</label>
+                    <div id="monacoEditor" class="monaco-container"></div>
+                </div>
+                
+                <textarea id="notes" style="display: none;"></textarea>
+                
+                <div>
+                    <input id="practiceLinkInput" placeholder="Paste practice link" />
+                    <button type="button" id="addPracticeLinkBtn" class="secondary-btn">Add Link</button>
+                    <div id="practiceLinksPreview" style="margin-top:6px;"></div>
+                </div>
+                <br>
+                <div class="form-actions">
+                    <button id="saveProblemBtn" class="primary-btn">Save</button>
+                    <button type="button" class="secondary-btn" onclick="closeProblemForm()">Close</button>
+                </div>
             </div>
-            <button id="applyFilterBtn">Apply</button>
-            <button id="resetFilterBtn">Reset</button>
-         </div>
-         <!-- ADD / EDIT FORM -->
-         <div id="problemForm" style="display:none;">
-            <h3>Add / Edit Problem</h3>
-            <input id="problem" placeholder="Problem Name" />
-            <!-- Tags + suggestions for add/edit -->
-            <input id="tags" placeholder="Tags (comma separated)" />
-            <div id="tagInputSuggestionsBox"
-               style="display:none; border:1px solid #ccc; background:#fff;
-               max-height:140px; overflow-y:auto; margin-bottom:8px;"></div>
-            <select id="difficulty">
-               <option value="Easy">Easy</option>
-               <option value="Medium">Medium</option>
-               <option value="Hard">Hard</option>
-            </select>
-            <textarea id="notes" placeholder="Notes"></textarea>
-            <!-- MULTI PRACTICE LINKS -->
-            <div>
-               <input id="practiceLinkInput" placeholder="Paste practice link" />
-               <button type="button" id="addPracticeLinkBtn">Add Link</button>
-               <div id="practiceLinksPreview" style="margin-top:6px;"></div>
+
+            <h2>Your Problems</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Problem</th>
+                            <th>Difficulty</th>
+                            <th>Notes</th>
+                            <th>Tags</th>
+                            <th>Revision</th>
+                            <th>Practice</th>
+                            <th>★</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
             </div>
-            <br>
-            <button id="saveProblemBtn">Save</button>
-            <button type="button" onclick="closeProblemForm()">Close</button>
-         </div>
-         <!-- TABLE -->
-         <h2>Your Problems</h2>
-         <table>
-            <thead>
-               <tr>
-                  <th>#</th>
-                  <th>Problem</th>
-                  <th>Difficulty</th>
-                  <th>Notes</th>
-                  <th>Tags</th>
-                  <th>Revision</th>
-                  <th>Practice</th>
-                  <th>★</th>
-                  <th>Actions</th>
-               </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-         </table>
-         <!-- PAGINATION -->
-         <div id="paginationControls" class="pagination">
-            <button id="prevPageBtn" class="page-btn">
-            <span class="icon">⬅ </span>
-            <span>Prev</span>
-            </button>
-            <span id="pageInfo"></span>
-            <button id="nextPageBtn" class="page-btn">
-            <span>Next</span>
-            <span class="icon"> ⮕</span>
-            </button>
-         </div>
-      </div>
-      <!-- NOTE MODAL -->
-      <div id="noteModal" class="note-modal" style="display:none;">
-         <div class="note-modal-content">
-            <h3>Note</h3>
-            <p id="noteModalText"></p>
-            <button type="button" onclick="closeNoteModal()">Close</button>
-         </div>
-      </div>
-      <script type="module" src="script.js"></script>
-   </body>
-   <footer class="app-footer">
-      Made with ❤️ by <strong>Shubham</strong>
-   </footer>
+
+            <div id="paginationControls" class="pagination">
+                <button id="prevPageBtn" class="page-btn">
+                    <i class="fa-solid fa-chevron-left"></i> Prev
+                </button>
+                <span id="pageInfo"></span>
+                <button id="nextPageBtn" class="page-btn">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="wiki-view" style="display:none;">
+            
+            <div class="wiki-sidebar">
+                <div class="wiki-search-box">
+                    <input type="text" id="wikiSearch" placeholder="Search Topic..." oninput="filterWikiList()">
+                    <button onclick="createNewNote()" class="primary-btn small-btn" style="width:100%; margin-top:5px;">
+                        <i class="fa-solid fa-file-circle-plus"></i> New Note
+                    </button>
+                </div>
+                <div id="wikiList" class="wiki-list-container"></div>
+            </div>
+
+            <div class="wiki-main">
+                <div class="wiki-header">
+                    <div class="wiki-meta-row">
+                        <div class="input-group">
+                            <label>Topic</label>
+                            <input type="text" id="wikiTopic" placeholder="e.g. Graph" autocomplete="off">
+                            <div id="wikiTopicSuggestionsBox" class="suggestions-dropdown"></div>
+                        </div>
+                        <div class="input-group" style="flex: 1.5;">
+                            <label>Subtopic / Title</label>
+                            <input type="text" id="wikiSubtopic" placeholder="e.g. BFS Algorithm">
+                        </div>
+                        <div class="wiki-actions">
+                            <button onclick="saveWikiNote()" class="primary-btn">Save</button>
+                            <button onclick="deleteWikiNote()" class="danger-btn"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="wikiMonaco" class="wiki-editor-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="noteModal" class="note-modal" style="display:none;">
+        <div class="note-modal-content">
+            <div id="monacoModalEditor" style="height: 400px; border: 1px solid #ccc; margin: 10px 0;"></div>
+            <button type="button" class="secondary-btn" onclick="closeNoteModal()">Close</button>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        Made with ❤️ by <strong>Shubham</strong>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
 </html>
