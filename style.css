@@ -133,6 +133,18 @@ input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 
 .layout-stacked .collapsed .section-header { writing-mode: horizontal-tb; padding: 10px 15px; }
 .layout-stacked .collapsed .toggle-icon { transform: rotate(0); }
 
+/* Add this to style.css */
+
+/* Fix: Allow scrolling in Wiki Main area when in Stacked Layout */
+#wiki-view.layout-stacked .wiki-main {
+    overflow-y: auto;
+}
+
+/* Optional: Ensure proper padding/margin when scrolling */
+#wiki-view.layout-stacked .wiki-split-container {
+    padding-bottom: 40px; 
+}
+
 /* =========================================
    RICH TEXT EDITOR & DISPLAY
    ========================================= */
