@@ -31,8 +31,11 @@ require(['vs/editor/editor.main'], function () {
     const editorEl = document.getElementById('monacoEditor');
     if (editorEl) {
         monacoEditor = monaco.editor.create(editorEl, {
-            value: '', language: 'cpp', theme: 'vs-dark', automaticLayout: true,
+            value: '// Write your code implementation here...', language: 'cpp', theme: 'vs-dark', automaticLayout: true,
             minimap: { enabled: false }, fontSize: 14
+        });
+        monacoEditor.onDidFocusEditorText(() => {
+            if (monacoEditor.getValue().includes('// Write your code')) monacoEditor.setValue('');
         });
     }
 
@@ -40,25 +43,19 @@ require(['vs/editor/editor.main'], function () {
     if (modalEl) {
         monacoModalEditor = monaco.editor.create(modalEl, {
             value: '', language: 'cpp', theme: 'vs-dark', automaticLayout: true,
-            minimap: { enabled: true }, readOnly: true, fontSize: 14
+            minimap: { enabled: true }, readOnly: true, fontSize: 13
         });
     }
 
     const wikiEl = document.getElementById('wikiMonaco');
     if (wikiEl) {
         wikiEditor = monaco.editor.create(wikiEl, {
-            value: '// Select a note to view or create new...',
+            value: '// Code implementation goes here...',
             language: 'cpp', theme: 'vs-dark', automaticLayout: true,
             minimap: { enabled: false }, fontSize: 14
         });
-
-        // === FIX: Auto-delete placeholder on focus ===
         wikiEditor.onDidFocusEditorText(() => {
-            const val = wikiEditor.getValue().trim();
-            // Check if current text is one of the default placeholders
-            if (val === '// Select a note to view or create new...') {
-                wikiEditor.setValue(''); // Clear it automatically
-            }
+            if (wikiEditor.getValue().includes('// Code implementation')) wikiEditor.setValue('');
         });
     }
     updateMonacoTheme();
@@ -72,12 +69,78 @@ function updateMonacoTheme() {
     if (wikiEditor) monaco.editor.setTheme(theme);
 }
 
-function getMonacoValue() {
-    return monacoEditor ? monacoEditor.getValue() : '';
+function getMonacoValue() { return monacoEditor ? monacoEditor.getValue() : ''; }
+
+/* =========================================
+   RICH TEXT & LAYOUT HELPERS
+   ========================================= */
+window.formatDoc = (cmd, value = null) => {
+    if (value) document.execCommand(cmd, false, value);
+    else document.execCommand(cmd);
+};
+
+window.toggleLayout = (context) => {
+    let container;
+    let editorToRefresh;
+    if (context === 'wikiView') { container = document.getElementById('wiki-view'); editorToRefresh = wikiEditor; }
+    else if (context === 'problemForm') { container = document.getElementById('problemForm'); editorToRefresh = monacoEditor; }
+    else if (context === 'noteModal') { container = document.getElementById('modalSplit'); editorToRefresh = monacoModalEditor; }
+
+    if (container) {
+        container.classList.toggle('layout-stacked');
+        if (editorToRefresh) setTimeout(() => editorToRefresh.layout(), 50);
+    }
+};
+
+window.togglePanel = (panelId) => {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    panel.classList.toggle('collapsed');
+    setTimeout(() => {
+        if (monacoEditor) monacoEditor.layout();
+        if (wikiEditor) wikiEditor.layout();
+        if (monacoModalEditor) monacoModalEditor.layout();
+    }, 300);
+};
+
+function enableAutoLinking(editorId) {
+    const editor = document.getElementById(editorId);
+    if (!editor) return;
+    editor.addEventListener('keydown', (e) => { // Using keydown to catch before newline triggers
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const range = selection.getRangeAt(0);
+        const node = range.startContainer;
+        if (node.nodeType !== Node.TEXT_NODE) return;
+        
+        const textContent = node.textContent;
+        const cursorPosition = range.startOffset;
+        const textBefore = textContent.substring(0, cursorPosition);
+        const words = textBefore.split(/\s+/);
+        const lastWord = words[words.length - 1];
+        
+        const urlRegex = /^(https?:\/\/|www\.)[^\s]+$/i;
+        if (urlRegex.test(lastWord)) {
+            const wordEndIndex = cursorPosition;
+            const wordStartIndex = wordEndIndex - lastWord.length;
+            const urlRange = document.createRange();
+            urlRange.setStart(node, wordStartIndex);
+            urlRange.setEnd(node, wordEndIndex);
+            
+            selection.removeAllRanges();
+            selection.addRange(urlRange);
+            
+            let href = lastWord;
+            if (!/^https?:\/\//i.test(href)) href = 'http://' + href;
+            document.execCommand('createLink', false, href);
+            selection.collapseToEnd();
+        }
+    });
 }
 
 /* =========================================
-   GLOBAL STATE
+   GLOBAL STATE & AUTH
    ========================================= */
 let currentUser = null;
 let editId = null;
@@ -89,21 +152,11 @@ const PAGE_SIZE = 10;
 let currentNoteId = null;
 let allWikiNotes = [];
 
-/* =========================================
-   INITIALIZATION & AUTH
-   ========================================= */
 document.addEventListener('DOMContentLoaded', () => {
     const googleBtn = document.getElementById("googleBtn");
     const logoutBtn = document.getElementById("logoutBtn");
-
-    if (googleBtn) {
-        googleBtn.onclick = async () => {
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
-            catch (err) { console.error("Login Failed:", err); }
-        };
-    }
+    if (googleBtn) googleBtn.onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { console.error(err); } };
     if (logoutBtn) logoutBtn.onclick = async () => signOut(auth);
-
     const darkModeBtn = document.getElementById("darkModeToggle");
     if (darkModeBtn) {
         darkModeBtn.onclick = () => {
@@ -114,13 +167,22 @@ document.addEventListener('DOMContentLoaded', () => {
             updateMonacoTheme();
         };
     }
+    enableAutoLinking('problemTextNotes');
+    enableAutoLinking('wikiTextNotes');
+    
+    // Global Link Handler
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.closest('.editor-content')) {
+            link.target = '_blank';
+        }
+    });
 });
 
 onAuthStateChanged(auth, (user) => {
     const authSection = document.getElementById("auth-section");
     const appSection = document.getElementById("app-section");
     const welcomeText = document.getElementById("welcome-text");
-
     if (user) {
         currentUser = user;
         if(authSection) authSection.style.display = "none";
@@ -130,14 +192,11 @@ onAuthStateChanged(auth, (user) => {
         loadWikiNotes();
     } else {
         currentUser = null;
-        if(authSection) authSection.style.display = "block";
+        if(authSection) authSection.style.display = "grid"; 
         if(appSection) appSection.style.display = "none";
     }
 });
 
-/* =========================================
-   TABS
-   ========================================= */
 window.switchTab = (tab) => {
     const trackerView = document.getElementById('tracker-view');
     const wikiView = document.getElementById('wiki-view');
@@ -151,19 +210,48 @@ window.switchTab = (tab) => {
         tabTracker.classList.toggle('active', tab === 'tracker');
         tabWiki.classList.toggle('active', tab === 'wiki');
     }
-    if (tab === 'wiki' && wikiEditor) setTimeout(() => wikiEditor.layout(), 50);
+    if (tab === 'wiki' && wikiEditor) setTimeout(() => wikiEditor.layout(), 100);
+    if (tab === 'tracker' && monacoEditor) setTimeout(() => monacoEditor.layout(), 100);
 };
 
-/* =========================================
-   TRACKER HELPER
-   ========================================= */
+function validateField(elementId, errorMessage) {
+    const el = document.getElementById(elementId);
+    if (!el) return true;
+    const value = el.value.trim();
+    const nextEl = el.nextElementSibling;
+    const hasError = nextEl && nextEl.classList.contains('error-text');
+    if (!value) {
+        if (!hasError) {
+            el.classList.add('input-error');
+            const errDiv = document.createElement('div');
+            errDiv.className = 'error-text';
+            errDiv.innerText = errorMessage;
+            el.insertAdjacentElement('afterend', errDiv);
+            el.addEventListener('input', function() {
+                el.classList.remove('input-error');
+                if (el.nextElementSibling && el.nextElementSibling.classList.contains('error-text')) el.nextElementSibling.remove();
+            }, { once: true });
+        }
+        return false;
+    }
+    return true;
+}
+
+function showSaveStatus(msg, isError = false) {
+    const statusEl = document.getElementById('wikiSaveStatus');
+    if (statusEl) {
+        statusEl.textContent = msg;
+        statusEl.style.color = isError ? "#e74c3c" : "#27ae60";
+        statusEl.style.opacity = "1";
+        setTimeout(() => { statusEl.style.opacity = "0"; }, 2000);
+    }
+}
+
 function getWebsiteName(url) {
     try {
         const domain = new URL(url).hostname.replace("www.", "");
         if (domain.includes("leetcode")) return "LeetCode";
         if (domain.includes("geeksforgeeks")) return "GFG";
-        if (domain.includes("codeforces")) return "Codeforces";
-        if (domain.includes("hackerrank")) return "HackerRank";
         const name = domain.split('.')[0];
         return name.charAt(0).toUpperCase() + name.slice(1);
     } catch { return "Link"; }
@@ -194,18 +282,18 @@ if (addLinkBtn) {
 }
 
 /* =========================================
-   AUTOCOMPLETE
+   AUTOCOMPLETE (KEYBOARD SUPPORT ADDED)
    ========================================= */
-let filterFocusIndex = -1;
-let addFormFocusIndex = -1;
-let wikiTopicFocusIndex = -1;
-
 const filterTag = document.getElementById("filterTag");
 const filterTagBox = document.getElementById("tagSuggestionsBox");
 const tagsInput = document.getElementById("tags");
 const formTagBox = document.getElementById("tagInputSuggestionsBox");
 const wikiTopicInput = document.getElementById("wikiTopic");
 const wikiTopicBox = document.getElementById("wikiTopicSuggestionsBox");
+
+let filterFocusIndex = -1;
+let addFormFocusIndex = -1;
+let wikiTopicFocusIndex = -1;
 
 function renderSuggestions(matches, container, onSelect, activeIndex) {
     container.innerHTML = "";
@@ -229,6 +317,7 @@ function updateActiveItem(items, index) {
     }
 }
 
+// 1. Filter Search with Keyboard
 if (filterTag && filterTagBox) {
     filterTag.addEventListener("input", () => {
         const query = filterTag.value.trim().toLowerCase();
@@ -247,11 +336,12 @@ if (filterTag && filterTagBox) {
         if (filterTagBox.style.display === "none") return;
         if (e.key === "ArrowDown") { e.preventDefault(); filterFocusIndex = (filterFocusIndex + 1) % items.length; updateActiveItem(items, filterFocusIndex); }
         else if (e.key === "ArrowUp") { e.preventDefault(); filterFocusIndex = (filterFocusIndex - 1 + items.length) % items.length; updateActiveItem(items, filterFocusIndex); }
-        else if (e.key === "Enter") { e.preventDefault(); if (items[filterFocusIndex]) items[filterFocusIndex].click(); else if (items.length) items[0].click(); }
+        else if (e.key === "Enter") { e.preventDefault(); if (items[filterFocusIndex]) items[filterFocusIndex].click(); }
         else if (e.key === "Escape") filterTagBox.style.display = "none";
     });
 }
 
+// 2. Add Form Tags with Keyboard
 if (tagsInput && formTagBox) {
     tagsInput.addEventListener("input", () => {
         const raw = tagsInput.value;
@@ -272,11 +362,12 @@ if (tagsInput && formTagBox) {
         if (formTagBox.style.display === "none") return;
         if (e.key === "ArrowDown") { e.preventDefault(); addFormFocusIndex = (addFormFocusIndex + 1) % items.length; updateActiveItem(items, addFormFocusIndex); }
         else if (e.key === "ArrowUp") { e.preventDefault(); addFormFocusIndex = (addFormFocusIndex - 1 + items.length) % items.length; updateActiveItem(items, addFormFocusIndex); }
-        else if (e.key === "Enter") { e.preventDefault(); if (items[addFormFocusIndex]) items[addFormFocusIndex].click(); else if (items.length) items[0].click(); }
+        else if (e.key === "Enter") { e.preventDefault(); if (items[addFormFocusIndex]) items[addFormFocusIndex].click(); }
         else if (e.key === "Escape") formTagBox.style.display = "none";
     });
 }
 
+// 3. Wiki Topic with Keyboard
 if (wikiTopicInput && wikiTopicBox) {
     wikiTopicInput.addEventListener("input", () => {
         const query = wikiTopicInput.value.trim().toLowerCase();
@@ -294,7 +385,7 @@ if (wikiTopicInput && wikiTopicBox) {
         if (wikiTopicBox.style.display === "none") return;
         if (e.key === "ArrowDown") { e.preventDefault(); wikiTopicFocusIndex = (wikiTopicFocusIndex + 1) % items.length; updateActiveItem(items, wikiTopicFocusIndex); }
         else if (e.key === "ArrowUp") { e.preventDefault(); wikiTopicFocusIndex = (wikiTopicFocusIndex - 1 + items.length) % items.length; updateActiveItem(items, wikiTopicFocusIndex); }
-        else if (e.key === "Enter") { e.preventDefault(); if (items[wikiTopicFocusIndex]) items[wikiTopicFocusIndex].click(); else if (items.length) items[0].click(); }
+        else if (e.key === "Enter") { e.preventDefault(); if (items[wikiTopicFocusIndex]) items[wikiTopicFocusIndex].click(); }
         else if (e.key === "Escape") wikiTopicBox.style.display = "none";
     });
 }
@@ -305,8 +396,9 @@ document.addEventListener("click", (e) => {
     if (wikiTopicBox && !wikiTopicBox.contains(e.target) && e.target !== wikiTopicInput) wikiTopicBox.style.display = "none";
 });
 
+
 /* =========================================
-   TRACKER DATA
+   TRACKER LOGIC
    ========================================= */
 function loadProblems() {
     if(!currentUser) return;
@@ -318,18 +410,47 @@ function loadProblems() {
             allProblems.push(p);
             (p.tags || []).forEach((tag) => allTags.push(tag));
         });
+
+        // ----------------------------------------------------
+        // SORTING: Oldest FIRST (index 0) -> Newest LAST (end of list)
+        // ----------------------------------------------------
+        allProblems.sort((a, b) => {
+            // Helper to handle Firestore Timestamp objects or JS Date strings
+            const getTime = (p) => {
+                if (!p.updatedAt) return 0;
+                // If it's a Firestore Timestamp, it has .toDate()
+                if (typeof p.updatedAt.toDate === 'function') return p.updatedAt.toDate().getTime();
+                // Otherwise assume it's a date string or object
+                return new Date(p.updatedAt).getTime();
+            };
+            
+            return getTime(a) - getTime(b); // Ascending Order
+        });
+
         allTags = [...new Set(allTags)];
         renderTable();
     });
 }
 
+document.getElementById("openAddFormBtn").onclick = () => {
+    document.getElementById("problemForm").style.display = "block";
+    if(monacoEditor) monacoEditor.setValue('// Write your code implementation here...');
+    document.getElementById("problemTextNotes").innerHTML = ""; 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 const saveBtn = document.getElementById("saveProblemBtn");
 if (saveBtn) {
     saveBtn.onclick = async () => {
-        if (!currentUser) return;
+        if (!currentUser) return alert("Please login first.");
+        const isProblemValid = validateField("problem", "Required");
+        const isTagsValid = validateField("tags", "Required");
+        if (!isProblemValid || !isTagsValid) return;
+
         const problemInput = document.getElementById("problem");
-        const difficultySelect = document.getElementById("difficulty");
         const tagsInput = document.getElementById("tags");
+        const difficultySelect = document.getElementById("difficulty");
+        const notesInput = document.getElementById("problemTextNotes");
         const cleanTags = tagsInput.value.split(",").map((t) => t.trim()).filter(Boolean);
         const revisionDate = new Date();
         revisionDate.setDate(revisionDate.getDate() + 7);
@@ -337,7 +458,8 @@ if (saveBtn) {
         const baseData = {
             problem: problemInput.value.trim(),
             difficulty: difficultySelect.value,
-            notes: getMonacoValue(),
+            conceptNotes: notesInput.innerHTML, 
+            code: getMonacoValue(),
             practiceLinks: currentPracticeLinks, 
             tags: cleanTags,
             updatedAt: new Date()
@@ -345,11 +467,11 @@ if (saveBtn) {
 
         try {
             const ref = collection(db, "users", currentUser.uid, "problems");
-            if (editId) { await updateDoc(doc(ref, editId), baseData); } 
-            else { await addDoc(ref, { ...baseData, starred: false, revisionCount: 0, revisionDue: revisionDate.toISOString() }); }
+            if (editId) await updateDoc(doc(ref, editId), baseData); 
+            else await addDoc(ref, { ...baseData, starred: false, revisionCount: 0, revisionDue: revisionDate.toISOString() });
             closeProblemForm();
             renderTable();
-        } catch (error) { alert("Error saving: " + error.message); }
+        } catch (error) { console.error(error); alert("Error saving: " + error.message); }
     };
 }
 
@@ -358,14 +480,13 @@ function renderTable() {
     const filterTagVal = document.getElementById("filterTag").value.toLowerCase();
     const onlyStarred = document.getElementById("starFilterToggle").checked;
     tableBody.innerHTML = "";
-
     let filtered = allProblems.filter(p => !filterTagVal || (p.tags || []).some(t => t.toLowerCase().includes(filterTagVal)));
     if (onlyStarred) filtered = filtered.filter(p => p.starred);
 
     const totalItems = filtered.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
     if (currentPage > totalPages) currentPage = totalPages;
-    
+
     document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages} (${totalItems})`;
     document.getElementById("prevPageBtn").disabled = currentPage === 1;
     document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
@@ -375,36 +496,24 @@ function renderTable() {
     pageItems.forEach((p, index) => {
         const diff = new Date(p.revisionDue) - new Date();
         const daysLeft = Math.max(0, Math.ceil(diff / 86400000)); 
-        
-        let difficultyColor = "#27ae60"; 
-        if (p.difficulty === "Medium") difficultyColor = "#f39c12"; 
-        if (p.difficulty === "Hard") difficultyColor = "#e74c3c";   
-
+        const dayLabel = daysLeft === 1 ? "day" : "days";
+        let difficultyColor = p.difficulty === "Medium" ? "#f39c12" : p.difficulty === "Hard" ? "#e74c3c" : "#27ae60"; 
         let revisionColor = "#27ae60"; 
-        let isDue = Math.ceil(diff / 86400000) <= 0;
-        
-        let revisionBtnHtml = isDue 
-            ? `<button onclick="renewRevision('${p.id}')" style="margin-left:5px; font-size:12px;" title="Reset Revision"><i class="fa-solid fa-rotate-right"></i></button>`
-            : `<button class="locked-btn" disabled><i class="fa-solid fa-lock"></i></button>`;
-        
         if (daysLeft <= 1) revisionColor = "#e74c3c"; 
-        else if (daysLeft <= 4) revisionColor = "#f39c12";
+
+        const hasNotes = p.conceptNotes || p.code || p.notes; 
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${(currentPage - 1) * PAGE_SIZE + index + 1}</td>
             <td>${p.problem}</td>
             <td style="color:${difficultyColor};">${p.difficulty}</td>
-            <td>${p.notes ? `<button onclick="viewNote('${p.id}')"><i class="fa-regular fa-eye"></i></button>` : "-"}</td>
+            <td>${hasNotes ? `<button onclick="viewNote('${p.id}')"><i class="fa-regular fa-eye"></i></button>` : "-"}</td>
             <td>${(p.tags || []).join(", ")}</td>
-            <td style="color:${revisionColor};">${daysLeft} days ${revisionBtnHtml}</td>
+            <td style="color:${revisionColor};">${daysLeft} ${dayLabel}</td>
             <td>${(p.practiceLinks || []).map(l => `<a href="${l}" target="_blank">${getWebsiteName(l)}</a>`).join(", ")}</td>
-            <td class="star-cell">
-                <button class="${p.starred ? "starred" : ""}" onclick="toggleStar('${p.id}', ${p.starred})">
-                    ${p.starred ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>'}
-                </button>
-            </td>
-            <td>
+            <td class="star-cell"><button class="${p.starred ? "starred" : ""}" onclick="toggleStar('${p.id}', ${p.starred})">${p.starred ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>'}</button></td>
+            <td class="action-cell">
                 <button class="edit-btn" onclick="editProblem('${p.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
                 <button class="delete-btn" onclick="deleteProblem('${p.id}')"><i class="fa-solid fa-trash"></i></button>
             </td>
@@ -413,25 +522,14 @@ function renderTable() {
     });
 }
 
-window.renewRevision = async (id) => {
-    if (!currentUser) return;
-    const problem = allProblems.find(p => p.id === id);
-    if (!problem) return;
-    const currentCount = problem.revisionCount || 0;
-    const newCount = currentCount + 1;
-    const intervalDays = 7 * (newCount + 1); 
-    const nextDate = new Date();
-    nextDate.setDate(nextDate.getDate() + intervalDays);
-    await updateDoc(doc(db, "users", currentUser.uid, "problems", id), { revisionDue: nextDate.toISOString(), revisionCount: newCount, updatedAt: new Date() });
-};
+window.renewRevision = async (id) => { if(!currentUser) return; const problem = allProblems.find(p => p.id === id); if(!problem) return; const currentCount = problem.revisionCount || 0; const newCount = currentCount + 1; const intervalDays = 7 * (newCount + 1); const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + intervalDays); await updateDoc(doc(db, "users", currentUser.uid, "problems", id), { revisionDue: nextDate.toISOString(), revisionCount: newCount, updatedAt: new Date() }); };
 
 /* =========================================
    WIKI LOGIC
    ========================================= */
 function loadWikiNotes() {
     if (!currentUser) return;
-    const ref = collection(db, "users", currentUser.uid, "wiki");
-    onSnapshot(ref, (snap) => {
+    onSnapshot(collection(db, "users", currentUser.uid, "wiki"), (snap) => {
         allWikiNotes = [];
         snap.forEach(d => allWikiNotes.push({ id: d.id, ...d.data() }));
         window.filterWikiList();
@@ -440,96 +538,50 @@ function loadWikiNotes() {
 
 window.saveWikiNote = async () => {
     if (!currentUser) return alert("Login required");
+    const isTopicValid = validateField("wikiTopic", "Required");
+    const isSubtopicValid = validateField("wikiSubtopic", "Required");
+    if (!isTopicValid || !isSubtopicValid) return;
+
     const topic = document.getElementById('wikiTopic').value.trim();
     const subtopic = document.getElementById('wikiSubtopic').value.trim();
-    if (!topic || !subtopic) return alert("Topic and Subtopic are required");
+    const textNotes = document.getElementById('wikiTextNotes').innerHTML;
+    const codeContent = wikiEditor ? wikiEditor.getValue() : "";
 
     const data = {
-        topic: topic,
-        subtopic: subtopic,
-        title: subtopic, 
-        content: wikiEditor ? wikiEditor.getValue() : "",
-        updatedAt: new Date().toISOString()
+        topic: topic, subtopic: subtopic, title: subtopic, 
+        textNotes: textNotes, code: codeContent, updatedAt: new Date().toISOString()
     };
     
-    const ref = collection(db, "users", currentUser.uid, "wiki");
     try {
+        const ref = collection(db, "users", currentUser.uid, "wiki");
         if (currentNoteId) await updateDoc(doc(ref, currentNoteId), data);
         else { const docRef = await addDoc(ref, data); currentNoteId = docRef.id; }
-        alert("Wiki Note Saved!");
-    } catch (e) { console.error(e); alert("Error saving note"); }
-};
-
-window.deleteWikiNote = async () => {
-    if (!currentNoteId || !confirm("Delete this note?")) return;
-    await deleteDoc(doc(db, "users", currentUser.uid, "wiki", currentNoteId));
-    window.createNewNote();
+        showSaveStatus("Saved successfully!");
+        loadWikiNotes(); 
+    } catch (e) { showSaveStatus("Error", true); }
 };
 
 window.createNewNote = () => {
     currentNoteId = null;
     document.getElementById('wikiTopic').value = "";
     document.getElementById('wikiSubtopic').value = "";
-    if(wikiEditor) wikiEditor.setValue("// Select a note to view or create new...");
+    document.getElementById('wikiTextNotes').innerHTML = "";
+    if(wikiEditor) wikiEditor.setValue("// Code implementation goes here...");
     document.querySelectorAll('.wiki-item').forEach(el => el.classList.remove('active'));
 };
 
-/* === WIKI SEARCH & LIST NAVIGATION === */
-let wikiSearchIndex = -1;
-const wikiSearchInput = document.getElementById("wikiSearch");
-
 window.filterWikiList = () => {
-    wikiSearchIndex = -1;
-    const query = wikiSearchInput.value.toLowerCase();
-    const filtered = allWikiNotes.filter(note => {
-        const top = (note.topic || "").toLowerCase();
-        const sub = (note.subtopic || "").toLowerCase();
-        return top.includes(query) || sub.includes(query);
-    });
+    const query = document.getElementById("wikiSearch").value.toLowerCase();
+    const filtered = allWikiNotes.filter(n => (n.topic||"").toLowerCase().includes(query) || (n.subtopic||"").toLowerCase().includes(query));
     renderWikiList(filtered);
 };
-
-if (wikiSearchInput) {
-    wikiSearchInput.addEventListener("keydown", (e) => {
-        const list = document.getElementById('wikiList');
-        const items = Array.from(list.querySelectorAll('.wiki-item'));
-        if (items.length === 0) return;
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            wikiSearchIndex++;
-            if (wikiSearchIndex >= items.length) wikiSearchIndex = 0;
-            updateActiveWikiItem(items, wikiSearchIndex);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            wikiSearchIndex--;
-            if (wikiSearchIndex < 0) wikiSearchIndex = items.length - 1;
-            updateActiveWikiItem(items, wikiSearchIndex);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (wikiSearchIndex > -1 && items[wikiSearchIndex]) {
-                items[wikiSearchIndex].click();
-            } else if (items.length > 0) items[0].click();
-        }
-    });
-}
-
-function updateActiveWikiItem(items, index) {
-    items.forEach(item => item.classList.remove('keyboard-active'));
-    if (items[index]) {
-        items[index].classList.add('keyboard-active');
-        items[index].scrollIntoView({ block: 'nearest' });
-    }
-}
 
 function renderWikiList(notes) {
     const list = document.getElementById('wikiList');
     list.innerHTML = "";
-    if (notes.length === 0) { list.innerHTML = '<div style="padding:20px; color:#888; font-size:14px;">No notes found.</div>'; return; }
-
     const grouped = {};
     notes.forEach(note => {
-        const topic = (note.topic && note.topic.trim()) ? note.topic.trim().toUpperCase() : "UNCATEGORIZED";
+        const topic = (note.topic || "UNCATEGORIZED").toUpperCase();
         if (!grouped[topic]) grouped[topic] = [];
         grouped[topic].push(note);
     });
@@ -546,11 +598,11 @@ function renderWikiList(notes) {
                 currentNoteId = note.id;
                 document.getElementById('wikiTopic').value = note.topic || "";
                 document.getElementById('wikiSubtopic').value = note.subtopic || "";
-                if(wikiEditor) wikiEditor.setValue(note.content || "");
-                renderWikiList(allWikiNotes.filter(n => 
-                    (n.topic||"").toLowerCase().includes(wikiSearchInput.value.toLowerCase()) || 
-                    (n.subtopic||"").toLowerCase().includes(wikiSearchInput.value.toLowerCase())
-                ));
+                
+                document.getElementById('wikiTextNotes').innerHTML = note.textNotes || "";
+                const codeToLoad = note.code ?? note.content ?? "// No code saved";
+                if(wikiEditor) { wikiEditor.setValue(codeToLoad); setTimeout(() => wikiEditor.layout(), 50); }
+                window.filterWikiList();
             };
             div.innerHTML = `<div class="wiki-item-title">• ${note.subtopic}</div>`;
             list.appendChild(div);
@@ -558,17 +610,15 @@ function renderWikiList(notes) {
     });
 }
 
+window.deleteWikiNote = async () => { if(currentNoteId && confirm("Delete?")) { await deleteDoc(doc(db, "users", currentUser.uid, "wiki", currentNoteId)); window.createNewNote(); } };
+
 /* =========================================
-   HELPER FUNCTIONS
+   HELPER FUNCTIONS & MODALS
    ========================================= */
 if (localStorage.getItem("darkMode") === "on") document.body.classList.add("dark");
 document.getElementById("prevPageBtn").onclick = () => { if(currentPage > 1) { currentPage--; renderTable(); } };
 document.getElementById("nextPageBtn").onclick = () => { currentPage++; renderTable(); };
-document.getElementById("openAddFormBtn").onclick = () => {
-    document.getElementById("problemForm").style.display = "block";
-    if(monacoEditor) monacoEditor.setValue('');
-    document.getElementById("problemForm").scrollIntoView();
-};
+
 window.closeProblemForm = () => {
     document.getElementById("problemForm").style.display = "none";
     editId = null;
@@ -576,8 +626,12 @@ window.closeProblemForm = () => {
     renderPracticeLinksPreview();
     document.getElementById("problem").value = "";
     document.getElementById("tags").value = "";
+    document.getElementById("problemTextNotes").innerHTML = ""; 
+    document.querySelectorAll('.error-text').forEach(e => e.remove());
+    document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
     if(monacoEditor) monacoEditor.setValue('');
 };
+
 window.editProblem = (id) => {
     const p = allProblems.find(x => x.id === id);
     if (!p) return;
@@ -585,27 +639,49 @@ window.editProblem = (id) => {
     document.getElementById("problem").value = p.problem;
     document.getElementById("difficulty").value = p.difficulty;
     document.getElementById("tags").value = (p.tags || []).join(", ");
-    if(monacoEditor) monacoEditor.setValue(p.notes || "");
+    
+    document.getElementById("problemTextNotes").innerHTML = p.conceptNotes || ""; 
+    const codeToLoad = p.code ?? p.notes ?? ""; 
+    if(monacoEditor) { monacoEditor.setValue(codeToLoad); setTimeout(() => monacoEditor.layout(), 50); }
+    
     currentPracticeLinks = p.practiceLinks || [];
     renderPracticeLinksPreview();
     document.getElementById("problemForm").style.display = "block";
-    document.getElementById("problemForm").scrollIntoView();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
-window.deleteProblem = async (id) => { if(confirm("Delete problem?")) await deleteDoc(doc(db, "users", currentUser.uid, "problems", id)); };
+
+window.deleteProblem = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, "users", currentUser.uid, "problems", id)); };
 window.toggleStar = async (id, current) => { await updateDoc(doc(db, "users", currentUser.uid, "problems", id), { starred: !current }); };
+
+// View Note Modal Logic
 window.viewNote = (id) => {
     const p = allProblems.find(x => x.id === id);
-    if (monacoModalEditor) monacoModalEditor.setValue(p?.notes || "// No notes");
+    if (!p) return;
+
+    // Reset Modal Layout
+    const splitWrapper = document.getElementById('modalSplit');
+    if(splitWrapper) splitWrapper.classList.remove('layout-stacked');
+    const notePanel = document.getElementById('modalNotesPanel');
+    const codePanel = document.getElementById('modalCodePanel');
+    if(notePanel) notePanel.classList.remove('collapsed');
+    if(codePanel) codePanel.classList.remove('collapsed');
+
+    // Populate Data
+    let noteContent = p.conceptNotes || "<p style='color:#666; font-style:italic;'>No concept notes added.</p>";
+    // Ensure links open in new tab
+    noteContent = noteContent.replace(/<a /g, '<a target="_blank" ');
+    document.getElementById("modalTextDisplay").innerHTML = noteContent;
+    
+    if (monacoModalEditor) {
+        const codeContent = p.code ?? p.notes ?? "// No implementation code saved.";
+        monacoModalEditor.setValue(codeContent);
+        setTimeout(() => monacoModalEditor.layout(), 100);
+    }
     document.getElementById("noteModal").style.display = "flex";
 };
+
 window.closeNoteModal = () => document.getElementById("noteModal").style.display = "none";
-document.getElementById("toggleSortBtn").onclick = () => {
-    const panel = document.getElementById("sortPanel");
-    panel.style.display = panel.style.display === "none" ? "flex" : "none";
-};
+
+document.getElementById("toggleSortBtn").onclick = () => { document.getElementById("sortPanel").style.display = document.getElementById("sortPanel").style.display === "none" ? "flex" : "none"; };
 document.getElementById("applyFilterBtn").onclick = () => { currentPage = 1; renderTable(); };
-document.getElementById("resetFilterBtn").onclick = () => {
-    document.getElementById("filterTag").value = "";
-    document.getElementById("starFilterToggle").checked = false;
-    renderTable();
-};
+document.getElementById("resetFilterBtn").onclick = () => { document.getElementById("filterTag").value = ""; renderTable(); };
