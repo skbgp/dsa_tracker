@@ -9,31 +9,36 @@
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
 </head>
 <body>
+
     <div id="auth-section">
-        <h1 class="app-title"><i class="fa-solid fa-book-open"></i> DSA Tracker & Wiki</h1>
-        <button id="googleBtn" class="google-btn">
-            <i class="fa-brands fa-google"></i> Sign in with Google
-        </button>
-        <p id="auth-message"></p>
+        <div class="auth-content-wrapper">
+            <h1 class="app-title"><i class="fa-solid fa-book-open"></i> DSA Tracker</h1>
+            <p class="app-subtitle">Master DSA. Build your personal Wiki.</p>
+            <button id="googleBtn" class="google-btn" title="Sign in with Google Account">
+                <i class="fa-brands fa-google"></i> Sign in with Google
+            </button>
+            <p id="auth-message"></p>
+        </div>
+        <div class="auth-footer">Made with ❤️ by <strong>Shubham</strong></div>
     </div>
 
     <div id="app-section" style="display:none;">
         
         <div class="top-header">
             <div class="nav-tabs">
-                <button id="tabTracker" class="nav-btn active" onclick="switchTab('tracker')">
+                <button id="tabTracker" class="nav-btn active" onclick="switchTab('tracker')" title="View Problem Tracker">
                     <i class="fa-solid fa-list-check"></i> Problem Tracker
                 </button>
-                <button id="tabWiki" class="nav-btn" onclick="switchTab('wiki')">
+                <button id="tabWiki" class="nav-btn" onclick="switchTab('wiki')" title="View Personal Wiki">
                     <i class="fa-solid fa-book-atlas"></i> Wiki
                 </button>
             </div>
             <div class="user-controls">
                 <span id="welcome-text"></span>
-                <button id="darkModeToggle" class="secondary-btn">
+                <button id="darkModeToggle" class="secondary-btn" title="Toggle Dark/Light Mode">
                     <i class="fa-solid fa-moon"></i> Dark
                 </button> 
-                <button id="logoutBtn" class="danger-btn" style="background:#e74c3c; color:white;">
+                <button id="logoutBtn" class="danger-btn" title="Logout from App">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </button>
             </div>
@@ -42,7 +47,7 @@
         <div id="tracker-view">
             <div class="tracker-controls">
                 <div class="left-controls">
-                    <button id="toggleSortBtn" class="secondary-btn">
+                    <button id="toggleSortBtn" class="secondary-btn" title="Show/Hide Filters">
                         <i class="fa-solid fa-filter"></i> Sort & Filter
                     </button>
                     <div id="sortPanel" style="display:none;">
@@ -51,7 +56,7 @@
                             <div id="tagSuggestionsBox" class="suggestions-dropdown"></div>
                         </div>
                         <div class="filter-star-row">
-                            <input type="checkbox" id="starFilterToggle">
+                            <input type="checkbox" id="starFilterToggle" title="Show only starred problems">
                             <label for="starFilterToggle">Starred</label>
                         </div>
                         <button id="applyFilterBtn" class="primary-btn small-btn">Apply</button>
@@ -59,12 +64,12 @@
                     </div>
                 </div>
                 
-                <button id="openAddFormBtn" class="primary-btn">
+                <button id="openAddFormBtn" class="primary-btn" title="Add a new problem">
                     <i class="fa-solid fa-plus"></i> Add Problem
                 </button>
             </div>
 
-            <div id="problemForm" style="display:none;">
+            <div id="problemForm" style="display:none; margin-bottom: 20px;">
                 <input id="problem" placeholder="Problem Name" />
                 
                 <div class="input-wrapper">
@@ -77,15 +82,44 @@
                     <option value="Medium">Medium</option>
                     <option value="Hard">Hard</option>
                 </select>
-                
-                <div style="margin: 10px 0;">
-                    <label for="monacoEditor">Notes / Code Snippet</label>
-                    <div id="monacoEditor" class="monaco-container"></div>
+
+                <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('problemForm')" title="Switch between Split and Stacked view">
+                        <i class="fa-solid fa-table-columns"></i> Change Layout
+                    </button>
                 </div>
                 
-                <textarea id="notes" style="display: none;"></textarea>
+                <div id="problemSplit" class="editor-split-wrapper">
+                    <div class="editor-section notes-section" id="problemNotesPanel">
+                        <div class="section-header" onclick="togglePanel('problemNotesPanel')" title="Click to Collapse/Expand">
+                            <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
+                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="section-body">
+                            <div class="rich-editor-container" style="border:none;">
+                                <div class="editor-toolbar">
+                                    <button type="button" onclick="formatDoc('bold')" title="Bold"><i class="fa-solid fa-bold"></i></button>
+                                    <button type="button" onclick="formatDoc('italic')" title="Italic"><i class="fa-solid fa-italic"></i></button>
+                                    <button type="button" onclick="formatDoc('underline')" title="Underline"><i class="fa-solid fa-underline"></i></button>
+                                    <button type="button" onclick="formatDoc('insertUnorderedList')" title="List"><i class="fa-solid fa-list-ul"></i></button>
+                                </div>
+                                <div id="problemTextNotes" class="editor-content" contenteditable="true" placeholder="Write theory here..."></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="editor-section code-section" id="problemCodePanel">
+                        <div class="section-header" onclick="togglePanel('problemCodePanel')" title="Click to Collapse/Expand">
+                            <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
+                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="section-body">
+                            <div id="monacoEditor" class="monaco-container" style="border:none;"></div>
+                        </div>
+                    </div>
+                </div>
                 
-                <div>
+                <div style="margin-top: 15px;">
                     <input id="practiceLinkInput" placeholder="Paste practice link" />
                     <button type="button" id="addPracticeLinkBtn" class="secondary-btn">Add Link</button>
                     <div id="practiceLinksPreview" style="margin-top:6px;"></div>
@@ -97,7 +131,6 @@
                 </div>
             </div>
 
-            <h2>Your Problems</h2>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -109,8 +142,8 @@
                             <th>Tags</th>
                             <th>Revision</th>
                             <th>Practice</th>
-                            <th>★</th>
-                            <th>Actions</th>
+                            <th style="text-align:center;">★</th>
+                            <th style="text-align:center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -118,22 +151,17 @@
             </div>
 
             <div id="paginationControls" class="pagination">
-                <button id="prevPageBtn" class="page-btn">
-                    <i class="fa-solid fa-chevron-left"></i> Prev
-                </button>
-                <span id="pageInfo"></span>
-                <button id="nextPageBtn" class="page-btn">
-                    Next <i class="fa-solid fa-chevron-right"></i>
-                </button>
+                <button id="prevPageBtn" class="page-btn secondary-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                <span id="pageInfo" style="font-size: 14px; font-weight: 600;"></span>
+                <button id="nextPageBtn" class="page-btn secondary-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
             </div>
         </div>
 
         <div id="wiki-view" style="display:none;">
-            
             <div class="wiki-sidebar">
                 <div class="wiki-search-box">
                     <input type="text" id="wikiSearch" placeholder="Search Topic..." oninput="filterWikiList()">
-                    <button onclick="createNewNote()" class="primary-btn small-btn" style="width:100%; margin-top:5px;">
+                    <button onclick="createNewNote()" class="primary-btn small-btn" style="width:100%; margin-top:10px;">
                         <i class="fa-solid fa-file-circle-plus"></i> New Note
                     </button>
                 </div>
@@ -153,27 +181,89 @@
                             <input type="text" id="wikiSubtopic" placeholder="e.g. BFS Algorithm">
                         </div>
                         <div class="wiki-actions">
+                            <span id="wikiSaveStatus" class="save-status"></span>
+                            <button onclick="toggleLayout('wikiView')" class="secondary-btn" title="Toggle View (Split/Stacked)">
+                                <i class="fa-solid fa-table-columns"></i>
+                            </button>
                             <button onclick="saveWikiNote()" class="primary-btn">Save</button>
                             <button onclick="deleteWikiNote()" class="danger-btn"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
-                <div id="wikiMonaco" class="wiki-editor-container"></div>
+                
+                <div id="wikiSplit" class="wiki-split-container">
+                    
+                    <div class="wiki-section notes-section" id="wikiNotesPanel">
+                        <div class="section-header" onclick="togglePanel('wikiNotesPanel')" title="Click to Collapse/Expand">
+                            <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
+                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="section-body">
+                            <div class="rich-editor-container" style="border:none;">
+                                <div class="editor-toolbar">
+                                    <button onclick="formatDoc('bold')"><i class="fa-solid fa-bold"></i></button>
+                                    <button onclick="formatDoc('italic')"><i class="fa-solid fa-italic"></i></button>
+                                    <button onclick="formatDoc('underline')"><i class="fa-solid fa-underline"></i></button>
+                                    <button onclick="formatDoc('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
+                                </div>
+                                <div id="wikiTextNotes" class="editor-content" contenteditable="true"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wiki-section code-section" id="wikiCodePanel">
+                        <div class="section-header" onclick="togglePanel('wikiCodePanel')" title="Click to Collapse/Expand">
+                            <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
+                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="section-body">
+                            <div id="wikiMonaco" class="wiki-editor-container" style="border:none;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
 
     <div id="noteModal" class="note-modal" style="display:none;">
         <div class="note-modal-content">
-            <div id="monacoModalEditor" style="height: 400px; border: 1px solid #ccc; margin: 10px 0;"></div>
-            <button type="button" class="secondary-btn" onclick="closeNoteModal()">Close</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">Problem Details</h3>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('noteModal')" title="Switch view">
+                        <i class="fa-solid fa-table-columns"></i> Layout
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="closeNoteModal()" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="modalSplit" class="editor-split-wrapper">
+                
+                <div class="editor-section notes-section" id="modalNotesPanel">
+                    <div class="section-header" onclick="togglePanel('modalNotesPanel')">
+                        <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="modalTextDisplay" class="text-display-box" style="padding:15px; overflow-y:auto; height:100%;"></div>
+                    </div>
+                </div>
+
+                <div class="editor-section code-section" id="modalCodePanel">
+                    <div class="section-header" onclick="togglePanel('modalCodePanel')">
+                        <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="monacoModalEditor" class="monaco-container" style="border:none;"></div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
-
-    <footer class="app-footer">
-        Made with ❤️ by <strong>Shubham</strong>
-    </footer>
 
     <script type="module" src="script.js"></script>
 </body>
