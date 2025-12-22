@@ -1,6 +1,3 @@
-Here is a professional README designed for your project. It highlights the features found in your code (Spaced Repetition, Wiki, Monaco Editor) and provides clear setup instructions.
-
----
 
 # 📚 DSA Tracker & Personal Wiki
 
