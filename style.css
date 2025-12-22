@@ -48,12 +48,22 @@ button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; f
 .secondary-btn:hover { background: #dee2e6; }
 .danger-btn { background: #ff6b6b; color: white; }
 .danger-btn:hover { background: #fa5252; }
+.small-btn { padding: 6px 12px; font-size: 13px; }
+
 .edit-btn, .delete-btn { background: transparent; padding: 6px 10px; font-size: 1.1rem; cursor: pointer; }
 .edit-btn { color: #adb5bd; } .edit-btn:hover { color: #3498db; background: #e6f7ff; border-radius: 4px; }
 .delete-btn { color: #adb5bd; } .delete-btn:hover { color: #ff6b6b; background: #fff5f5; border-radius: 4px; }
 
 input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
 input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+
+/* --- FIXED: Added input-wrapper for positioning --- */
+.input-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; margin-bottom: 10px; }
+.input-wrapper input { margin-bottom: 0; }
+
+.input-group { position: relative; width: 100%; display: flex; flex-direction: column; margin-bottom: 10px; }
+.input-group label { font-size: 0.85rem; color: #6c757d; margin-bottom: 4px; font-weight: 600; }
+.input-group input { margin-bottom: 0; }
 
 .top-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f3f5; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
 .nav-tabs { display: flex; gap: 20px; }
@@ -67,110 +77,56 @@ input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 
    COLLAPSIBLE & SPLIT LAYOUT
    ========================================= */
 .wiki-split-container, .editor-split-wrapper {
-    display: flex;
-    flex-direction: row; 
-    flex-grow: 1;
-    overflow: hidden;
-    padding: 0;
-    gap: 15px;
-    transition: all 0.3s ease;
+    display: flex; flex-direction: row; flex-grow: 1;
+    overflow: hidden; padding: 0; gap: 15px; transition: all 0.3s ease;
 }
 .wiki-split-container { padding: 15px; background: #f8f9fa; }
-
-.wiki-section, .editor-section {
-    display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease;
-}
+.wiki-section, .editor-section { display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
 .notes-section { flex: 1; min-width: 300px; }
 .code-section { flex: 1; min-width: 300px; }
 
-/* Header */
 .section-header {
     display: flex; justify-content: space-between; align-items: center;
-    background: #e9ecef; padding: 8px 12px;
-    border-radius: 6px 6px 0 0;
-    border: 1px solid #ced4da; border-bottom: none;
-    cursor: pointer; user-select: none; transition: background 0.2s;
+    background: #e9ecef; padding: 8px 12px; border-radius: 6px 6px 0 0;
+    border: 1px solid #ced4da; border-bottom: none; cursor: pointer; user-select: none; transition: background 0.2s;
 }
 .section-header:hover { background: #dee2e6; }
 .section-label { margin: 0; font-size: 0.8rem; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; }
 
 .section-body {
     flex-grow: 1; display: flex; flex-direction: column;
-    border: 1px solid #ced4da; border-top: none;
-    border-radius: 0 0 6px 6px; background: white;
-    overflow: hidden; height: 100%; min-height: 200px;
+    border: 1px solid #ced4da; border-top: none; border-radius: 0 0 6px 6px;
+    background: white; overflow: hidden; height: 100%; min-height: 200px;
 }
 
-/* Collapsed State */
 .collapsed {
     flex: 0 0 auto !important; width: 40px !important; min-width: 0 !important;
-    writing-mode: vertical-rl; text-orientation: mixed;
-    padding: 0; align-items: center; justify-content: center;
-    background: #e9ecef; border: 1px solid #ced4da; border-radius: 6px;
-    cursor: pointer;
+    writing-mode: vertical-rl; text-orientation: mixed; padding: 0; align-items: center; justify-content: center;
+    background: #e9ecef; border: 1px solid #ced4da; border-radius: 6px; cursor: pointer;
 }
-.collapsed .section-header {
-    background: transparent; border: none; padding: 10px 0;
-    width: 100%; border-radius: 0; writing-mode: vertical-rl;
-}
+.collapsed .section-header { background: transparent; border: none; padding: 10px 0; width: 100%; border-radius: 0; writing-mode: vertical-rl; }
 .collapsed .section-body { display: none; }
 .collapsed .toggle-icon { transform: rotate(-90deg); margin-top: 5px; }
 
-/* Stacked Layout */
-.layout-stacked .wiki-split-container, 
-.layout-stacked .editor-split-wrapper {
-    flex-direction: column !important;
-    height: auto !important; overflow: visible !important;
-}
-.layout-stacked .wiki-section, 
-.layout-stacked .editor-section {
-    width: 100% !important; flex: none !important; margin-bottom: 20px;
-}
-.layout-stacked .collapsed {
-    width: 100% !important; writing-mode: horizontal-tb; height: 50px;
-    flex-direction: row; padding: 0;
-}
+.layout-stacked .wiki-split-container, .layout-stacked .editor-split-wrapper { flex-direction: column !important; height: auto !important; overflow: visible !important; }
+.layout-stacked .wiki-section, .layout-stacked .editor-section { width: 100% !important; flex: none !important; margin-bottom: 20px; }
+.layout-stacked .collapsed { width: 100% !important; writing-mode: horizontal-tb; height: 50px; flex-direction: row; padding: 0; }
 .layout-stacked .collapsed .section-header { writing-mode: horizontal-tb; padding: 10px 15px; }
 .layout-stacked .collapsed .toggle-icon { transform: rotate(0); }
-
-/* Add this to style.css */
-
-/* Fix: Allow scrolling in Wiki Main area when in Stacked Layout */
-#wiki-view.layout-stacked .wiki-main {
-    overflow-y: auto;
-}
-
-/* Optional: Ensure proper padding/margin when scrolling */
-#wiki-view.layout-stacked .wiki-split-container {
-    padding-bottom: 40px; 
-}
 
 /* =========================================
    RICH TEXT EDITOR & DISPLAY
    ========================================= */
-.rich-editor-container {
-    display: flex; flex-direction: column; flex-grow: 1;
-    background: white; overflow: hidden; height: 100%;
-}
-.editor-toolbar {
-    display: flex; gap: 5px; padding: 8px; background: #e9ecef; border-bottom: 1px solid #ced4da;
-}
-.editor-toolbar button {
-    background: white; border: 1px solid #ced4da; padding: 4px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; color: #495057;
-}
+.rich-editor-container { display: flex; flex-direction: column; flex-grow: 1; background: white; overflow: hidden; height: 100%; }
+.editor-toolbar { display: flex; gap: 5px; padding: 8px; background: #e9ecef; border-bottom: 1px solid #ced4da; }
+.editor-toolbar button { background: white; border: 1px solid #ced4da; padding: 4px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; color: #495057; }
 .editor-toolbar button:hover { background: #dee2e6; color: #212529; }
-.editor-content {
-    flex-grow: 1; padding: 15px; overflow-y: auto; outline: none; font-family: 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; min-height: 150px;
-}
+.editor-content { flex-grow: 1; padding: 15px; overflow-y: auto; outline: none; font-family: 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; min-height: 150px; }
 .editor-content ul, .editor-content ol { padding-left: 20px; }
 .editor-content a { color: #3498db; text-decoration: underline; cursor: pointer; font-weight: 500; }
 .editor-content a:hover { color: #1d6fa5; background-color: #e6f7ff; border-radius: 2px; }
 
-.text-display-box { 
-    flex: 1; overflow-y: auto; padding: 15px; 
-    background: white; font-family: 'Segoe UI', sans-serif; 
-    font-size: 15px; line-height: 1.6; 
-}
+.text-display-box { flex: 1; overflow-y: auto; padding: 15px; background: white; font-family: 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
 .text-display-box ul, .text-display-box ol { padding-left: 20px; margin: 10px 0; }
 .wiki-editor-container, .monaco-container { flex-grow: 1; width: 100%; height: 100%; border: none; }
 
@@ -187,9 +143,15 @@ input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 
    ========================================= */
 .tracker-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
 .left-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; }
-#sortPanel { background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border: 1px solid #e9ecef; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-.input-wrapper { position: relative; width: 100%; margin-bottom: 10px; }
-.search-wrapper { margin-bottom: 0; width: auto; min-width: 200px; }
+#sortPanel { background: #f8f9fa; padding: 6px 10px; border-radius: 6px; border: 1px solid #e9ecef; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.search-wrapper { position: relative; display: flex; align-items: center; }
+.search-wrapper input { padding: 6px 10px 6px 30px; margin-bottom: 0; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; width: 180px; }
+.search-wrapper .search-icon { position: absolute; left: 10px; color: #adb5bd; font-size: 13px; }
+
+.sort-select { 
+    margin-bottom: 0; width: auto; min-width: 140px; cursor: pointer; 
+    border-color: #ced4da; padding: 6px 25px 6px 10px; font-size: 14px;
+}
 
 .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #e9ecef; border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; min-width: 800px; }
@@ -200,26 +162,61 @@ td { background: white; }
 .star-cell button.starred { color: #fcc419; }
 .star-cell button:not(.starred) { color: #dee2e6; }
 .action-cell { white-space: nowrap; text-align: center; min-width: 120px; }
-.filter-star-row { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 
 #wiki-view { display: flex; flex-grow: 1; height: 78vh; border: 1px solid #e9ecef; border-radius: 8px; overflow: hidden; background: white; }
 .wiki-sidebar { width: 280px; background: #f8f9fa; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; flex-shrink: 0; }
 .wiki-main { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
 .wiki-search-box { padding: 15px; border-bottom: 1px solid #e9ecef; background: #fff; }
 .wiki-list-container { flex-grow: 1; overflow-y: auto; }
-.wiki-topic-header { background: #e9ecef; color: #495057; font-size: 0.75rem; font-weight: 700; padding: 8px 15px; letter-spacing: 0.5px; text-transform: uppercase; }
-.wiki-item { padding: 12px 15px; border-bottom: 1px solid #f1f3f5; cursor: pointer; border-left: 3px solid transparent; transition: all 0.1s; }
-.wiki-item:hover { background: white; padding-left: 18px; }
+
+/* --- WIKI HEADER & ITEMS --- */
+.wiki-topic-header {
+    background: #e9ecef; color: #495057; font-size: 0.75rem; font-weight: 700;
+    padding: 10px 15px; letter-spacing: 0.5px; text-transform: uppercase;
+    display: flex; align-items: center; 
+    cursor: grab; border-bottom: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+.wiki-topic-header:hover { background: #dee2e6; }
+.wiki-topic-header:active { cursor: grabbing; }
+
+.header-toggle-icon {
+    margin-right: 8px; width: 15px; text-align: center; display: inline-block;
+    transition: transform 0.2s ease; cursor: pointer;
+}
+
+.dragging { opacity: 0.5; background: #e6f7ff !important; border: 1px dashed #3498db; }
+.drag-over { border-top: 3px solid #3498db !important; }
+.wiki-subtopic-container { display: none; background: #fdfdfd; }
+
+.wiki-item {
+    padding: 10px 15px; border-bottom: 1px solid #f1f3f5; cursor: grab;
+    border-left: 3px solid transparent; transition: all 0.1s;
+    display: flex; align-items: center; padding-left: 25px; 
+}
+.wiki-item:hover { background: white; border-left-color: #dee2e6; }
+.wiki-item:active { cursor: grabbing; }
 .wiki-item.active { background: #e6f7ff; border-left-color: #3498db; color: #0d6efd; font-weight: 500; }
+.wiki-item-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; }
+
 .wiki-header { padding: 15px 20px; border-bottom: 1px solid #e9ecef; background: white; }
 .wiki-meta-row { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
-.suggestions-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.suggestion-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f8f9fa; }
+
+/* --- FIXED: Z-Index 10000 ensures it is above modal (which is 3000) --- */
+.suggestions-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6;
+    z-index: 10000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.suggestion-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f8f9fa; color: #333; }
 .suggestion-item:hover, .suggestion-item.active-suggestion { background: #e6f7ff; color: #0056b3; }
+
 .pagination { display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap; align-items: center; }
 
+/* MODAL STYLING */
 .note-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; padding: 15px; backdrop-filter: blur(2px); }
-.note-modal-content { background: white; padding: 25px; width: 100%; max-width: 1000px; height: 85vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+.note-modal-content { background: white; padding: 25px; width: 95%; max-width: 1400px; height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+.modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
 /* =========================================
    DARK MODE
@@ -231,11 +228,14 @@ body.dark .app-title, body.dark #welcome-text, body.dark a { color: #e0e0e0; }
 body.dark a { color: #64b5f6; }
 body.dark .google-btn { background: #2d2d2d; color: #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
 body.dark .google-btn:hover { background: #333; }
-body.dark .top-header, body.dark th, body.dark .wiki-header, body.dark .wiki-search-box, body.dark #wiki-view, body.dark .table-responsive, body.dark .monaco-container, body.dark .wiki-editor-container, body.dark #sortPanel { background: #1e1e1e; border-color: #333; color: #e0e0e0; }
+
+body.dark .top-header, body.dark th, body.dark .wiki-header, body.dark .wiki-search-box, body.dark #wiki-view, body.dark .wiki-main, body.dark .table-responsive, body.dark .monaco-container, body.dark .wiki-editor-container, body.dark #sortPanel { background: #1e1e1e; border-color: #333; color: #e0e0e0; }
+
 body.dark td, body.dark .wiki-sidebar { background: #1e1e1e; border-color: #333; color: #ccc; }
 body.dark input, body.dark select, body.dark textarea { background: #252526; border-color: #444; color: #fff; }
 body.dark .secondary-btn { background: #333; color: #ccc; }
 body.dark .wiki-topic-header { background: #252526; color: #888; border-color: #333; }
+body.dark .wiki-topic-header:hover { background: #2d2d2d; }
 body.dark .wiki-item { border-color: #2d2d2d; }
 body.dark .wiki-item:hover { background: #2d2d2d; }
 body.dark .wiki-item.active { background: #263238; border-left-color: #3498db; color: #3498db; }
@@ -246,6 +246,7 @@ body.dark .suggestions-dropdown { background: #252526; border-color: #333; }
 body.dark .suggestion-item { color: #eee; border-bottom-color: #333; }
 body.dark .suggestion-item:hover, body.dark .suggestion-item.active-suggestion { background: #3498db; color: white; }
 body.dark .input-error { background-color: #3a2323; }
+body.dark .wiki-subtopic-container { background: #1c1c1c; }
 
 body.dark .section-header { background: #252526; border-color: #444; }
 body.dark .section-header:hover { background: #333; }
