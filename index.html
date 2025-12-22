@@ -48,87 +48,28 @@
             <div class="tracker-controls">
                 <div class="left-controls">
                     <button id="toggleSortBtn" class="secondary-btn" title="Show/Hide Filters">
-                        <i class="fa-solid fa-filter"></i> Sort & Filter
+                        <i class="fa-solid fa-filter"></i> Sort & Search
                     </button>
+                    
                     <div id="sortPanel" style="display:none;">
-                        <div class="input-wrapper search-wrapper">
-                            <input id="filterTag" placeholder="Search tag..." autocomplete="off" />
-                            <div id="tagSuggestionsBox" class="suggestions-dropdown"></div>
+                        <div class="search-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input id="searchProblemInput" placeholder="Search by name..." autocomplete="off" />
                         </div>
-                        <div class="filter-star-row">
-                            <input type="checkbox" id="starFilterToggle" title="Show only starred problems">
-                            <label for="starFilterToggle">Starred</label>
-                        </div>
-                        <button id="applyFilterBtn" class="primary-btn small-btn">Apply</button>
-                        <button id="resetFilterBtn" class="secondary-btn small-btn">Reset</button>
+
+                        <span style="font-size:14px; font-weight:600; color:#666; margin-left:10px;">Sort:</span>
+                        <select id="sortBySelect" class="sort-select">
+                            <option value="none" selected>None</option>
+                            <option value="tag">Tag</option>
+                            <option value="revision">Revision Due Soon</option>
+                            <option value="starred">Starred First</option>
+                        </select>
                     </div>
                 </div>
                 
                 <button id="openAddFormBtn" class="primary-btn" title="Add a new problem">
                     <i class="fa-solid fa-plus"></i> Add Problem
                 </button>
-            </div>
-
-            <div id="problemForm" style="display:none; margin-bottom: 20px;">
-                <input id="problem" placeholder="Problem Name" />
-                
-                <div class="input-wrapper">
-                    <input id="tags" placeholder="Tags (comma separated)" autocomplete="off" />
-                    <div id="tagInputSuggestionsBox" class="suggestions-dropdown"></div>
-                </div>
-
-                <select id="difficulty">
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                </select>
-
-                <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
-                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('problemForm')" title="Switch between Split and Stacked view">
-                        <i class="fa-solid fa-table-columns"></i> Change Layout
-                    </button>
-                </div>
-                
-                <div id="problemSplit" class="editor-split-wrapper">
-                    <div class="editor-section notes-section" id="problemNotesPanel">
-                        <div class="section-header" onclick="togglePanel('problemNotesPanel')" title="Click to Collapse/Expand">
-                            <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
-                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="section-body">
-                            <div class="rich-editor-container" style="border:none;">
-                                <div class="editor-toolbar">
-                                    <button type="button" onclick="formatDoc('bold')" title="Bold"><i class="fa-solid fa-bold"></i></button>
-                                    <button type="button" onclick="formatDoc('italic')" title="Italic"><i class="fa-solid fa-italic"></i></button>
-                                    <button type="button" onclick="formatDoc('underline')" title="Underline"><i class="fa-solid fa-underline"></i></button>
-                                    <button type="button" onclick="formatDoc('insertUnorderedList')" title="List"><i class="fa-solid fa-list-ul"></i></button>
-                                </div>
-                                <div id="problemTextNotes" class="editor-content" contenteditable="true" placeholder="Write theory here..."></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="editor-section code-section" id="problemCodePanel">
-                        <div class="section-header" onclick="togglePanel('problemCodePanel')" title="Click to Collapse/Expand">
-                            <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
-                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="section-body">
-                            <div id="monacoEditor" class="monaco-container" style="border:none;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 15px;">
-                    <input id="practiceLinkInput" placeholder="Paste practice link" />
-                    <button type="button" id="addPracticeLinkBtn" class="secondary-btn">Add Link</button>
-                    <div id="practiceLinksPreview" style="margin-top:6px;"></div>
-                </div>
-                <br>
-                <div class="form-actions">
-                    <button id="saveProblemBtn" class="primary-btn">Save</button>
-                    <button type="button" class="secondary-btn" onclick="closeProblemForm()">Close</button>
-                </div>
             </div>
 
             <div class="table-responsive">
@@ -149,11 +90,13 @@
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
-
+            
             <div id="paginationControls" class="pagination">
+                <button id="fastPrevBtn" class="page-btn secondary-btn"><i class="fa-solid fa-angles-left"></i></button>
                 <button id="prevPageBtn" class="page-btn secondary-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
                 <span id="pageInfo" style="font-size: 14px; font-weight: 600;"></span>
                 <button id="nextPageBtn" class="page-btn secondary-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+                <button id="fastNextBtn" class="page-btn secondary-btn"><i class="fa-solid fa-angles-right"></i></button>
             </div>
         </div>
 
@@ -169,56 +112,134 @@
             </div>
 
             <div class="wiki-main">
-                <div class="wiki-header">
-                    <div class="wiki-meta-row">
-                        <div class="input-group">
-                            <label>Topic</label>
-                            <input type="text" id="wikiTopic" placeholder="e.g. Graph" autocomplete="off">
-                            <div id="wikiTopicSuggestionsBox" class="suggestions-dropdown"></div>
-                        </div>
-                        <div class="input-group" style="flex: 1.5;">
-                            <label>Subtopic / Title</label>
-                            <input type="text" id="wikiSubtopic" placeholder="e.g. BFS Algorithm">
-                        </div>
-                        <div class="wiki-actions">
-                            <span id="wikiSaveStatus" class="save-status"></span>
-                            <button onclick="toggleLayout('wikiView')" class="secondary-btn" title="Toggle View (Split/Stacked)">
-                                <i class="fa-solid fa-table-columns"></i>
-                            </button>
-                            <button onclick="saveWikiNote()" class="primary-btn">Save</button>
-                            <button onclick="deleteWikiNote()" class="danger-btn"><i class="fa-solid fa-trash"></i></button>
+                <div id="wikiPlaceholder" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#888;">
+                    <i class="fa-solid fa-book-open" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
+                    <p>Select a note to view or click "New Note".</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="problemModal" class="note-modal" style="display:none;">
+        <div class="note-modal-content">
+            <div class="modal-header-row">
+                <h3 style="margin:0;">Manage Problem</h3>
+                <div style="display:flex; gap:10px;">
+                    <button id="saveProblemBtn" class="primary-btn small-btn" style="background-color: #27ae60;">
+                        <i class="fa-solid fa-floppy-disk"></i> Save
+                    </button>
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('problemModal')" title="Layout">
+                        <i class="fa-solid fa-table-columns"></i>
+                    </button>
+                    <button type="button" class="secondary-btn small-btn" onclick="closeProblemModal()" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                <input id="problem" placeholder="Problem Name" style="margin-bottom:0;" />
+                
+                <div class="input-wrapper" style="margin-bottom:0;">
+                    <input id="tags" placeholder="Tags (comma separated)" autocomplete="off" style="margin-bottom:0;" />
+                    <div id="tagInputSuggestionsBox" class="suggestions-dropdown"></div>
+                </div>
+
+                <select id="difficulty" style="margin-bottom:0;">
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+            </div>
+
+            <div id="problemSplit" class="editor-split-wrapper">
+                <div class="editor-section notes-section" id="problemNotesPanel">
+                    <div class="section-header" onclick="togglePanel('problemNotesPanel')">
+                        <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div class="rich-editor-container" style="border:none;">
+                            <div class="editor-toolbar">
+                                <button type="button" onclick="formatDoc('bold')"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" onclick="formatDoc('italic')"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" onclick="formatDoc('underline')"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" onclick="formatDoc('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
+                            </div>
+                            <div id="problemTextNotes" class="editor-content" contenteditable="true" placeholder="Write theory here..."></div>
                         </div>
                     </div>
                 </div>
-                
-                <div id="wikiSplit" class="wiki-split-container">
-                    
-                    <div class="wiki-section notes-section" id="wikiNotesPanel">
-                        <div class="section-header" onclick="togglePanel('wikiNotesPanel')" title="Click to Collapse/Expand">
-                            <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
-                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="section-body">
-                            <div class="rich-editor-container" style="border:none;">
-                                <div class="editor-toolbar">
-                                    <button onclick="formatDoc('bold')"><i class="fa-solid fa-bold"></i></button>
-                                    <button onclick="formatDoc('italic')"><i class="fa-solid fa-italic"></i></button>
-                                    <button onclick="formatDoc('underline')"><i class="fa-solid fa-underline"></i></button>
-                                    <button onclick="formatDoc('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
-                                </div>
-                                <div id="wikiTextNotes" class="editor-content" contenteditable="true"></div>
+                <div class="editor-section code-section" id="problemCodePanel">
+                    <div class="section-header" onclick="togglePanel('problemCodePanel')">
+                        <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="monacoEditor" class="monaco-container" style="border:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <input id="practiceLinkInput" placeholder="Paste practice link" />
+                <button type="button" id="addPracticeLinkBtn" class="secondary-btn">Add Link</button>
+                <div id="practiceLinksPreview" style="margin-top:6px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="wikiEditModal" class="note-modal" style="display:none;">
+        <div class="note-modal-content">
+            <div class="modal-header-row">
+                <div class="wiki-meta-row" style="flex-grow:1; margin-right:15px;">
+                    <div class="input-wrapper">
+                        <input type="text" id="wikiTopic" placeholder="Topic (e.g. Graph)" autocomplete="off" style="margin-bottom:0;">
+                        <div id="wikiTopicSuggestionsBox" class="suggestions-dropdown"></div>
+                    </div>
+                    <div class="input-group" style="flex: 1.5;">
+                        <input type="text" id="wikiSubtopic" placeholder="Subtopic (e.g. BFS)" style="margin-bottom:0;">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span id="wikiSaveStatus" class="save-status"></span>
+                    <button onclick="saveWikiNote()" class="primary-btn small-btn" style="background-color: #27ae60;">
+                        <i class="fa-solid fa-floppy-disk"></i> Save
+                    </button>
+                    <button onclick="toggleLayout('wikiEditModal')" class="secondary-btn small-btn" title="Layout">
+                        <i class="fa-solid fa-table-columns"></i>
+                    </button>
+                    <button onclick="closeWikiEditModal()" class="secondary-btn small-btn" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="wikiEditSplit" class="wiki-split-container" style="padding:0; background:none;">
+                <div class="wiki-section notes-section" id="wikiEditNotesPanel">
+                    <div class="section-header" onclick="togglePanel('wikiEditNotesPanel')">
+                        <label class="section-label"><i class="fa-regular fa-file-lines"></i> Edit Notes</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div class="rich-editor-container" style="border:none;">
+                            <div class="editor-toolbar">
+                                <button onclick="formatDoc('bold')"><i class="fa-solid fa-bold"></i></button>
+                                <button onclick="formatDoc('italic')"><i class="fa-solid fa-italic"></i></button>
+                                <button onclick="formatDoc('underline')"><i class="fa-solid fa-underline"></i></button>
+                                <button onclick="formatDoc('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
                             </div>
+                            <div id="wikiTextNotes" class="editor-content" contenteditable="true"></div>
                         </div>
                     </div>
-
-                    <div class="wiki-section code-section" id="wikiCodePanel">
-                        <div class="section-header" onclick="togglePanel('wikiCodePanel')" title="Click to Collapse/Expand">
-                            <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
-                            <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="section-body">
-                            <div id="wikiMonaco" class="wiki-editor-container" style="border:none;"></div>
-                        </div>
+                </div>
+                <div class="wiki-section code-section" id="wikiEditCodePanel">
+                    <div class="section-header" onclick="togglePanel('wikiEditCodePanel')">
+                        <label class="section-label"><i class="fa-solid fa-code"></i> Edit Code</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="wikiMonaco" class="wiki-editor-container" style="border:none;"></div>
                     </div>
                 </div>
             </div>
@@ -227,20 +248,19 @@
 
     <div id="noteModal" class="note-modal" style="display:none;">
         <div class="note-modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div class="modal-header-row">
                 <h3 style="margin:0;">Problem Details</h3>
                 <div style="display:flex; gap:10px;">
-                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('noteModal')" title="Switch view">
-                        <i class="fa-solid fa-table-columns"></i> Layout
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('noteModal')" title="Layout">
+                        <i class="fa-solid fa-table-columns"></i>
                     </button>
-                    <button type="button" class="secondary-btn" onclick="closeNoteModal()" title="Close">
+                    <button type="button" class="secondary-btn small-btn" onclick="closeNoteModal()" title="Close">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
             </div>
             
             <div id="modalSplit" class="editor-split-wrapper">
-                
                 <div class="editor-section notes-section" id="modalNotesPanel">
                     <div class="section-header" onclick="togglePanel('modalNotesPanel')">
                         <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
@@ -250,7 +270,6 @@
                         <div id="modalTextDisplay" class="text-display-box" style="padding:15px; overflow-y:auto; height:100%;"></div>
                     </div>
                 </div>
-
                 <div class="editor-section code-section" id="modalCodePanel">
                     <div class="section-header" onclick="togglePanel('modalCodePanel')">
                         <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
@@ -260,7 +279,64 @@
                         <div id="monacoModalEditor" class="monaco-container" style="border:none;"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
+    <div id="wikiModal" class="note-modal" style="display:none;">
+        <div class="note-modal-content">
+            <div class="modal-header-row" style="border-bottom:1px solid #eee; padding-bottom:10px;">
+                <div style="display:flex; flex-direction:column;">
+                    <span id="popupWikiTopic" style="font-size:0.75rem; color:#3498db; font-weight:700; text-transform:uppercase;">TOPIC</span>
+                    <h2 id="popupWikiTitle" style="margin:0; font-size:1.5rem; color:#2c3e50;">Title</h2>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button onclick="editWikiFromPopup()" class="primary-btn small-btn"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                    <button onclick="deleteWikiFromPopup()" class="danger-btn small-btn"><i class="fa-solid fa-trash"></i></button>
+                    <div style="width:1px; height:20px; background:#ccc; margin:0 5px;"></div>
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('wikiModal')" title="Layout">
+                        <i class="fa-solid fa-table-columns"></i>
+                    </button>
+                    <button type="button" class="secondary-btn small-btn" onclick="closeWikiModal()" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="wikiModalSplit" class="editor-split-wrapper">
+                <div class="editor-section notes-section" id="wikiModalNotesPanel">
+                    <div class="section-header" onclick="togglePanel('wikiModalNotesPanel')">
+                        <label class="section-label"><i class="fa-regular fa-file-lines"></i> Concept Notes</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="popupWikiNotes" class="text-display-box" style="padding:15px; overflow-y:auto; height:100%;"></div>
+                    </div>
+                </div>
+                <div class="editor-section code-section" id="wikiModalCodePanel">
+                    <div class="section-header" onclick="togglePanel('wikiModalCodePanel')">
+                        <label class="section-label"><i class="fa-solid fa-code"></i> Implementation</label>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="section-body">
+                        <div id="monacoWikiModalEditor" class="monaco-container" style="border:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="note-modal" style="display:none; z-index: 3100;">
+        <div class="note-modal-content" style="max-width: 400px; height: auto; text-align: center; padding: 30px;">
+            <h3 style="margin-top: 0; margin-bottom: 10px; color: #e74c3c;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Warning
+            </h3>
+            <p id="confirmMessage" style="color: inherit; margin-bottom: 25px;">
+                Are you sure you want to delete this? This action cannot be undone.
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="confirmBtn" class="primary-btn danger-btn">Yes, Delete</button>
+                <button onclick="closeConfirmModal()" class="secondary-btn">Cancel</button>
             </div>
         </div>
     </div>
