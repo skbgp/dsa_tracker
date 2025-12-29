@@ -728,10 +728,12 @@ function renderTable() {
     tableBody.innerHTML = "";
     
     // 1. Filter
-    let filtered = allProblems.filter(p => {
-        return !searchVal || p.problem.toLowerCase().includes(searchVal);
-    });
-
+// 1. Filter
+let filtered = allProblems.filter(p => {
+    // FIX: Safely handle if 'problem' text is missing or null
+    const probName = (p.problem || "").toLowerCase(); 
+    return !searchVal || probName.includes(searchVal);
+});
     // 2. Sort
     filtered.sort((a, b) => {
        
@@ -743,11 +745,12 @@ function renderTable() {
             if (tagA > tagB) return 1;
             return 0;
         }
-        if (sortBy === 'revision') {
-            const dateA = new Date(a.revisionDue).getTime();
-            const dateB = new Date(b.revisionDue).getTime();
-            return dateA - dateB;
-        }
+if (sortBy === 'revision') {
+    // FIX: Handle invalid dates safely
+    const dateA = p.revisionDue ? new Date(a.revisionDue).getTime() : 0;
+    const dateB = p.revisionDue ? new Date(b.revisionDue).getTime() : 0;
+    return dateA - dateB;
+}
         if (sortBy === 'starred') {
             // Starred items come first
             if (a.starred && !b.starred) return -1;
