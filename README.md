@@ -1,11 +1,11 @@
 
-# 📚 DSA Tracker & Personal Wiki
+#  DSA Tracker & Personal Wiki
 
 A comprehensive, full-stack application designed to help developers master Data Structures and Algorithms. This tool combines a **Spaced Repetition** problem tracker with a hierarchical **Personal Wiki**, allowing you to store concept notes and code implementations in one secure place.
 
-## ✨ Key Features
+## Key Features
 
-### 🚀 Problem Tracker
+### Problem Tracker
 
 * **CRUD Functionality:** Add, edit, delete, and view DSA problems.
 * **Spaced Repetition System:** Automated "Revision Due" logic (7-day intervals) to ensure long-term retention.
@@ -13,14 +13,14 @@ A comprehensive, full-stack application designed to help developers master Data 
 * **Smart Filtering:** Sort by tags, difficulty (Easy/Medium/Hard), starred status, or revision urgency.
 * **Practice Links:** Store external links (LeetCode, GFG) directly with the problem.
 
-### 📖 Personal Wiki
+### Personal Wiki
 
 * **Hierarchical Organization:** Organize knowledge by **Topics** (e.g., Graphs) and **Subtopics** (e.g., BFS, DFS).
 * **Drag & Drop:** Reorder topics and subtopics easily using drag-and-drop functionality.
 * **Dual Editor:** Rich Text editor for concept notes + Monaco Editor for code snippets.
 * **Search:** Real-time filtering of wiki topics.
 
-### 🛠️ General Utilities
+### General Utilities
 
 * **Authentication:** Secure Google Sign-In via Firebase Auth.
 * **Dark Mode:** Fully responsive dark/light theme toggle.
@@ -29,7 +29,7 @@ A comprehensive, full-stack application designed to help developers master Data 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES Modules).
 * **Backend:** Firebase (Firestore Database, Authentication).
@@ -38,7 +38,7 @@ A comprehensive, full-stack application designed to help developers master Data 
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 /
@@ -50,7 +50,7 @@ A comprehensive, full-stack application designed to help developers master Data 
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -99,7 +99,7 @@ Since the project uses ES Modules (`type="module"`), you cannot open `index.html
 
 ---
 
-## 💾 Database Schema
+## Database Schema
 
 The application automatically creates the user structure in Firestore upon first login:
 
@@ -109,7 +109,7 @@ The application automatically creates the user structure in Firestore upon first
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! If you have suggestions for features (e.g., exporting data, adding Python support to the editor), feel free to open an issue or pull request.
 
@@ -121,6 +121,6 @@ Contributions are welcome! If you have suggestions for features (e.g., exporting
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
