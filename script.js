@@ -40,7 +40,7 @@ require(['vs/editor/editor.main'], function () {
             value: '// Write your code implementation here...', language: 'cpp', theme: 'vs-dark', automaticLayout: true,
             minimap: { enabled: false }, fontSize: 14
         });
-        
+
         // --- FIX: Clear default text on focus ---
         monacoEditor.onDidFocusEditorWidget(() => {
             const val = monacoEditor.getValue().trim();
@@ -143,20 +143,20 @@ window.togglePanel = (panelId) => {
 function enableAutoLinking(editorId) {
     const editor = document.getElementById(editorId);
     if (!editor) return;
-    editor.addEventListener('keydown', (e) => { 
+    editor.addEventListener('keydown', (e) => {
         if (e.key !== ' ' && e.key !== 'Enter') return;
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
         const range = selection.getRangeAt(0);
         const node = range.startContainer;
         if (node.nodeType !== Node.TEXT_NODE) return;
-        
+
         const textContent = node.textContent;
         const cursorPosition = range.startOffset;
         const textBefore = textContent.substring(0, cursorPosition);
         const words = textBefore.split(/\s+/);
         const lastWord = words[words.length - 1];
-        
+
         const urlRegex = /^(https?:\/\/|www\.)[^\s]+$/i;
         if (urlRegex.test(lastWord)) {
             const wordEndIndex = cursorPosition;
@@ -164,10 +164,10 @@ function enableAutoLinking(editorId) {
             const urlRange = document.createRange();
             urlRange.setStart(node, wordStartIndex);
             urlRange.setEnd(node, wordEndIndex);
-            
+
             selection.removeAllRanges();
             selection.addRange(urlRange);
-            
+
             let href = lastWord;
             if (!/^https?:\/\//i.test(href)) href = 'http://' + href;
             document.execCommand('createLink', false, href);
@@ -195,96 +195,96 @@ const PAGE_SIZE = 10;
 // Wiki Globals
 let currentNoteId = null;
 let allWikiNotes = [];
-let wikiTopicOrder = []; 
-let wikiSubtopicOrder = {}; 
-let expandedTopics = {}; 
+let wikiTopicOrder = [];
+let wikiSubtopicOrder = {};
+let expandedTopics = {};
 
 // Initialization Logic
-window.loginWithGoogle = async () => { 
-    try { 
-        await signInWithPopup(auth, new GoogleAuthProvider()); 
-    } catch (err) { 
-        console.error(err); 
+window.loginWithGoogle = async () => {
+    try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (err) {
+        console.error(err);
         const msg = document.getElementById("auth-message");
         if (msg) msg.textContent = "Login Failed: " + err.message;
         else alert("Login Failed: " + err.message);
-    } 
+    }
 };
 window.logout = async () => signOut(auth);
-    const darkModeBtn = document.getElementById("darkModeToggle");
-    if (darkModeBtn) {
-        darkModeBtn.onclick = () => {
-            document.body.classList.toggle("dark");
-            const isDark = document.body.classList.contains('dark');
-            darkModeBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i> Light' : '<i class="fa-solid fa-moon"></i> Dark';
-            localStorage.setItem("darkMode", isDark ? "on" : "off");
-            updateMonacoTheme();
-        };
+const darkModeBtn = document.getElementById("darkModeToggle");
+if (darkModeBtn) {
+    darkModeBtn.onclick = () => {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains('dark');
+        darkModeBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i> Light' : '<i class="fa-solid fa-moon"></i> Dark';
+        localStorage.setItem("darkMode", isDark ? "on" : "off");
+        updateMonacoTheme();
+    };
+}
+enableAutoLinking('problemTextNotes');
+enableAutoLinking('wikiTextNotes');
+
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.closest('.editor-content')) {
+        link.target = '_blank';
     }
-    enableAutoLinking('problemTextNotes');
-    enableAutoLinking('wikiTextNotes');
-    
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        if (link && link.closest('.editor-content')) {
-            link.target = '_blank';
-        }
-    });
+});
 
-    // --- POPUP CLOSING LOGIC ---
-    const noteModal = document.getElementById("noteModal");
-    if (noteModal) noteModal.addEventListener("click", (e) => { if (e.target === noteModal) window.closeNoteModal(); });
+// --- POPUP CLOSING LOGIC ---
+const noteModal = document.getElementById("noteModal");
+if (noteModal) noteModal.addEventListener("click", (e) => { if (e.target === noteModal) window.closeNoteModal(); });
 
-    const problemModal = document.getElementById("problemModal");
-    if (problemModal) problemModal.addEventListener("click", (e) => { if (e.target === problemModal) window.closeProblemModal(); });
+const problemModal = document.getElementById("problemModal");
+if (problemModal) problemModal.addEventListener("click", (e) => { if (e.target === problemModal) window.closeProblemModal(); });
 
-    const wikiEditModal = document.getElementById("wikiEditModal");
-    if (wikiEditModal) wikiEditModal.addEventListener("click", (e) => { if (e.target === wikiEditModal) window.closeWikiEditModal(); });
+const wikiEditModal = document.getElementById("wikiEditModal");
+if (wikiEditModal) wikiEditModal.addEventListener("click", (e) => { if (e.target === wikiEditModal) window.closeWikiEditModal(); });
 
-    const confirmModal = document.getElementById("confirmModal");
-    if (confirmModal) confirmModal.addEventListener("click", (e) => { if (e.target === confirmModal) window.closeConfirmModal(); });
-    
-    // Wiki Popup Close Logic
-    const wikiModal = document.getElementById("wikiModal");
-    if (wikiModal) wikiModal.addEventListener("click", (e) => { if (e.target === wikiModal) window.closeWikiModal(); });
+const confirmModal = document.getElementById("confirmModal");
+if (confirmModal) confirmModal.addEventListener("click", (e) => { if (e.target === confirmModal) window.closeConfirmModal(); });
 
-    // --- SEARCH & SORT EVENTS ---
-    const sortSelect = document.getElementById("sortBySelect");
-    const searchInput = document.getElementById("searchProblemInput");
+// Wiki Popup Close Logic
+const wikiModal = document.getElementById("wikiModal");
+if (wikiModal) wikiModal.addEventListener("click", (e) => { if (e.target === wikiModal) window.closeWikiModal(); });
 
-    if (sortSelect) sortSelect.addEventListener("change", () => { currentPage = 1; renderTable(); });
-    if (searchInput) searchInput.addEventListener("input", () => { currentPage = 1; renderTable(); });
+// --- SEARCH & SORT EVENTS ---
+const sortSelect = document.getElementById("sortBySelect");
+const searchInput = document.getElementById("searchProblemInput");
 
-    // --- PAGINATION LISTENERS ---
-    document.getElementById("prevPageBtn").onclick = () => { if(currentPage > 1) { currentPage--; renderTable(); } };
-    document.getElementById("nextPageBtn").onclick = () => { currentPage++; renderTable(); };
-    
-    document.getElementById("fastPrevBtn").onclick = () => { 
-        currentPage = Math.max(1, currentPage - 5); 
-        renderTable(); 
-    };
-    document.getElementById("fastNextBtn").onclick = () => { 
-        currentPage += 5; 
-        renderTable(); 
-    };
+if (sortSelect) sortSelect.addEventListener("change", () => { currentPage = 1; renderTable(); });
+if (searchInput) searchInput.addEventListener("input", () => { currentPage = 1; renderTable(); });
 
-    // --- DRAFT LISTENERS (Attach to inputs) ---
-    // Safe check if element exists before adding listener
-    const problemIds = ['problem', 'tags', 'difficulty'];
-    problemIds.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.addEventListener('input', saveProblemDraft);
-    });
-    const pNotes = document.getElementById('problemTextNotes');
-    if(pNotes) pNotes.addEventListener('input', saveProblemDraft);
+// --- PAGINATION LISTENERS ---
+document.getElementById("prevPageBtn").onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
+document.getElementById("nextPageBtn").onclick = () => { currentPage++; renderTable(); };
 
-    const wikiIds = ['wikiTopic', 'wikiSubtopic'];
-    wikiIds.forEach(id => {
-         const el = document.getElementById(id);
-         if(el) el.addEventListener('input', saveWikiDraft);
-    });
-    const wNotes = document.getElementById('wikiTextNotes');
-    if(wNotes) wNotes.addEventListener('input', saveWikiDraft);
+document.getElementById("fastPrevBtn").onclick = () => {
+    currentPage = Math.max(1, currentPage - 5);
+    renderTable();
+};
+document.getElementById("fastNextBtn").onclick = () => {
+    currentPage += 5;
+    renderTable();
+};
+
+// --- DRAFT LISTENERS (Attach to inputs) ---
+// Safe check if element exists before adding listener
+const problemIds = ['problem', 'tags', 'difficulty'];
+problemIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveProblemDraft);
+});
+const pNotes = document.getElementById('problemTextNotes');
+if (pNotes) pNotes.addEventListener('input', saveProblemDraft);
+
+const wikiIds = ['wikiTopic', 'wikiSubtopic'];
+wikiIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveWikiDraft);
+});
+const wNotes = document.getElementById('wikiTextNotes');
+if (wNotes) wNotes.addEventListener('input', saveWikiDraft);
 // });
 
 /* =========================================
@@ -296,7 +296,7 @@ function saveProblemDraft() {
     // If the modal is hidden, do NOT save. This prevents the "empty init" bug on refresh.
     const modal = document.getElementById("problemModal");
     if (!modal || window.getComputedStyle(modal).display === "none") {
-        return; 
+        return;
     }
 
     // Safely get values
@@ -304,9 +304,9 @@ function saveProblemDraft() {
     const tEl = document.getElementById("tags");
     const dEl = document.getElementById("difficulty");
     const nEl = document.getElementById("problemTextNotes");
-    
+
     // If inputs aren't rendered yet, don't save
-    if (!pEl || !tEl) return; 
+    if (!pEl || !tEl) return;
 
     const draft = {
         problem: pEl.value,
@@ -324,11 +324,11 @@ function loadProblemDraft() {
     if (!saved) return;
     try {
         const draft = JSON.parse(saved);
-        if(draft.problem && document.getElementById("problem")) document.getElementById("problem").value = draft.problem;
-        if(draft.tags && document.getElementById("tags")) document.getElementById("tags").value = draft.tags;
-        if(draft.difficulty && document.getElementById("difficulty")) document.getElementById("difficulty").value = draft.difficulty;
-        if(draft.notes && document.getElementById("problemTextNotes")) document.getElementById("problemTextNotes").innerHTML = draft.notes;
-        
+        if (draft.problem && document.getElementById("problem")) document.getElementById("problem").value = draft.problem;
+        if (draft.tags && document.getElementById("tags")) document.getElementById("tags").value = draft.tags;
+        if (draft.difficulty && document.getElementById("difficulty")) document.getElementById("difficulty").value = draft.difficulty;
+        if (draft.notes && document.getElementById("problemTextNotes")) document.getElementById("problemTextNotes").innerHTML = draft.notes;
+
         if (draft.links) {
             currentPracticeLinks = draft.links;
             renderPracticeLinksPreview();
@@ -340,13 +340,13 @@ function loadProblemDraft() {
 
 function saveWikiDraft() {
     if (currentNoteId) return; // Do not overwrite draft if editing existing
-    
+
     // Check if Wiki Modal is Open
     const modal = document.getElementById("wikiEditModal");
     if (!modal || window.getComputedStyle(modal).display === "none") {
         return;
     }
-    
+
     const tEl = document.getElementById("wikiTopic");
     const sEl = document.getElementById("wikiSubtopic");
     const nEl = document.getElementById("wikiTextNotes");
@@ -368,9 +368,9 @@ function loadWikiDraft() {
     if (!saved) return;
     try {
         const draft = JSON.parse(saved);
-        if(draft.topic && document.getElementById("wikiTopic")) document.getElementById("wikiTopic").value = draft.topic;
-        if(draft.subtopic && document.getElementById("wikiSubtopic")) document.getElementById("wikiSubtopic").value = draft.subtopic;
-        if(draft.notes && document.getElementById("wikiTextNotes")) document.getElementById("wikiTextNotes").innerHTML = draft.notes;
+        if (draft.topic && document.getElementById("wikiTopic")) document.getElementById("wikiTopic").value = draft.topic;
+        if (draft.subtopic && document.getElementById("wikiSubtopic")) document.getElementById("wikiSubtopic").value = draft.subtopic;
+        if (draft.notes && document.getElementById("wikiTextNotes")) document.getElementById("wikiTextNotes").innerHTML = draft.notes;
         if (wikiEditor && draft.code && draft.code !== "// Code implementation goes here...") {
             wikiEditor.setValue(draft.code);
         }
@@ -388,15 +388,15 @@ onAuthStateChanged(auth, (user) => {
         currentUser = user;
         window.currentUser = user; // Expose for migration
         isAdmin = (user.email === ADMIN_EMAIL);
-        if(authSection) authSection.style.display = "none";
-        if(appSection) appSection.style.display = "block";
-        if(welcomeText) welcomeText.textContent = `Hi, ${user.displayName || 'User'}`;
+        if (authSection) authSection.style.display = "none";
+        if (appSection) appSection.style.display = "block";
+        if (welcomeText) welcomeText.textContent = `Hi, ${user.displayName || 'User'}`;
         loadProblems();
         loadWikiNotes();
     } else {
         currentUser = null;
-        if(authSection) authSection.style.display = "grid"; 
-        if(appSection) appSection.style.display = "none";
+        if (authSection) authSection.style.display = "grid";
+        if (appSection) appSection.style.display = "none";
     }
 });
 
@@ -428,7 +428,7 @@ function validateField(elementId, errorMessage) {
             errDiv.className = 'error-text';
             errDiv.innerText = errorMessage;
             el.insertAdjacentElement('afterend', errDiv);
-            el.addEventListener('input', function() {
+            el.addEventListener('input', function () {
                 el.classList.remove('input-error');
                 if (el.nextElementSibling && el.nextElementSibling.classList.contains('error-text')) el.nextElementSibling.remove();
             }, { once: true });
@@ -549,7 +549,7 @@ if (wikiTopicInput && wikiTopicBox) {
         if (!query) { wikiTopicBox.style.display = "none"; return; }
         const uniqueTopics = [...new Set(allWikiNotes.map(n => (n.topic || "").trim()).filter(Boolean))];
         const matches = uniqueTopics.filter(t => t.toLowerCase().includes(query));
-        
+
         renderSuggestions(matches, wikiTopicBox, (selectedTopic) => {
             wikiTopicInput.value = selectedTopic;
             wikiTopicBox.style.display = "none";
@@ -588,14 +588,14 @@ function toggleAddMode(show) {
         if (globalCheck) {
             globalCheck.style.display = (isAdmin && !editId) ? "flex" : "none";
         }
-        
+
         // Reset inputs disabled state
         document.getElementById("problem").disabled = false;
         document.getElementById("tags").disabled = false;
         document.getElementById("difficulty").disabled = false;
         document.getElementById("practiceLinkInput").disabled = false;
         document.getElementById("addPracticeLinkBtn").disabled = false;
-        
+
         if (!editId) {
             // 1. Clear fields FIRST
             document.getElementById("problem").value = "";
@@ -605,19 +605,19 @@ function toggleAddMode(show) {
             renderPracticeLinksPreview();
 
             // 2. Load Draft IMMEDIATELY (Before checking monaco)
-            loadProblemDraft(); 
-            
+            loadProblemDraft();
+
             // 3. Set Code Default (only if no draft code exists)
-            if(monacoEditor) {
-                 const saved = localStorage.getItem(DRAFT_KEY_PROBLEM);
-                 if(!saved || !JSON.parse(saved).code) {
-                      monacoEditor.setValue('// Write your code implementation here...');
-                 } else {
-                      monacoEditor.setValue(JSON.parse(saved).code);
-                 }
+            if (monacoEditor) {
+                const saved = localStorage.getItem(DRAFT_KEY_PROBLEM);
+                if (!saved || !JSON.parse(saved).code) {
+                    monacoEditor.setValue('// Write your code implementation here...');
+                } else {
+                    monacoEditor.setValue(JSON.parse(saved).code);
+                }
             }
         }
-        
+
         // Layout Monaco if it is ready
         if (monacoEditor) {
             setTimeout(() => monacoEditor.layout(), 100);
@@ -629,21 +629,21 @@ function toggleAddMode(show) {
 window.closeProblemModal = () => {
     // 1. HIDE MODAL FIRST to stop Draft Saving
     problemModal.style.display = "none";
-    
+
     // 2. Cleanup vars
     editId = null;
     currentPracticeLinks = [];
     renderPracticeLinksPreview();
-    
+
     // 3. Clear Inputs (Draft logic ignores this because display is none)
     document.getElementById("problem").value = "";
     document.getElementById("tags").value = "";
-    document.getElementById("problemTextNotes").innerHTML = ""; 
+    document.getElementById("problemTextNotes").innerHTML = "";
     document.querySelectorAll('.error-text').forEach(e => e.remove());
     document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
-    
+
     // 4. Reset Editor
-    if(monacoEditor) monacoEditor.setValue('');
+    if (monacoEditor) monacoEditor.setValue('');
 };
 
 // 2. Toggle Sort Mode
@@ -707,11 +707,11 @@ let globalUnsub = null;
 let userUnsub = null;
 
 function loadProblems() {
-    if(!currentUser) return;
-    
+    if (!currentUser) return;
+
     // Global problems
     const globalRef = collection(db, "global_problems");
-    if(globalUnsub) globalUnsub();
+    if (globalUnsub) globalUnsub();
     globalUnsub = onSnapshot(globalRef, (snap) => {
         globalProblemsList = [];
         snap.forEach(d => {
@@ -723,7 +723,7 @@ function loadProblems() {
 
     // User problems
     const userRef = collection(db, "users", currentUser.uid, "problems");
-    if(userUnsub) userUnsub();
+    if (userUnsub) userUnsub();
     userUnsub = onSnapshot(userRef, (snap) => {
         userProblemsMap = {};
         snap.forEach(d => {
@@ -748,17 +748,17 @@ if (saveBtn) {
         const notesInput = document.getElementById("problemTextNotes");
         const cleanTags = tagsInput.value.split(",").map((t) => t.trim()).filter(Boolean);
         const isGlobalCheck = document.getElementById("isGlobalProblem");
-        
+
         const baseData = {
             problem: problemInput.value.trim(),
             difficulty: difficultySelect.value,
-            practiceLinks: currentPracticeLinks, 
+            practiceLinks: currentPracticeLinks,
             tags: cleanTags,
             updatedAt: new Date().toISOString()
         };
 
         const userData = {
-            conceptNotes: notesInput.innerHTML, 
+            conceptNotes: notesInput.innerHTML,
             code: getMonacoValue(),
             updatedAt: new Date().toISOString()
         };
@@ -783,9 +783,9 @@ if (saveBtn) {
                 // ADD
                 const revisionDate = new Date();
                 revisionDate.setDate(revisionDate.getDate() + 7);
-                
+
                 const addGlobal = isAdmin && isGlobalCheck && isGlobalCheck.checked;
-                
+
                 if (addGlobal) {
                     const docRef = await addDoc(globalRef, { ...baseData, createdAt: new Date().toISOString() });
                     userData.isGlobalRef = true;
@@ -794,20 +794,20 @@ if (saveBtn) {
                     userData.revisionDue = revisionDate.toISOString();
                     await setDoc(doc(userRef, docRef.id), userData);
                 } else {
-                    await addDoc(userRef, { 
-                        ...baseData, 
+                    await addDoc(userRef, {
+                        ...baseData,
                         ...userData,
                         isGlobalRef: false,
-                        createdAt: new Date().toISOString(), 
-                        starred: false, 
-                        revisionCount: 0, 
-                        revisionDue: revisionDate.toISOString() 
+                        createdAt: new Date().toISOString(),
+                        starred: false,
+                        revisionCount: 0,
+                        revisionDue: revisionDate.toISOString()
                     });
                 }
             }
             // CLEAR DRAFT ON SUCCESS
             localStorage.removeItem(DRAFT_KEY_PROBLEM);
-            toggleAddMode(false); 
+            toggleAddMode(false);
         } catch (error) { console.error(error); alert("Error saving: " + error.message); }
     };
 }
@@ -819,20 +819,20 @@ function renderTable() {
     const tableBody = document.getElementById("tableBody");
     const sortBy = document.getElementById("sortBySelect").value;
     const searchVal = document.getElementById("searchProblemInput").value.toLowerCase();
-    
+
     tableBody.innerHTML = "";
-    
+
     // 1. Filter
-// 1. Filter
-let filtered = allProblems.filter(p => {
-    // FIX: Safely handle if 'problem' text is missing or null
-    const probName = (p.problem || "").toLowerCase(); 
-    return !searchVal || probName.includes(searchVal);
-});
+    // 1. Filter
+    let filtered = allProblems.filter(p => {
+        // FIX: Safely handle if 'problem' text is missing or null
+        const probName = (p.problem || "").toLowerCase();
+        return !searchVal || probName.includes(searchVal);
+    });
     // 2. Sort
     filtered.sort((a, b) => {
-       
-        
+
+
         if (sortBy === 'tag') {
             const tagA = (a.tags && a.tags[0]) ? a.tags[0].toLowerCase() : "";
             const tagB = (b.tags && b.tags[0]) ? b.tags[0].toLowerCase() : "";
@@ -840,20 +840,20 @@ let filtered = allProblems.filter(p => {
             if (tagA > tagB) return 1;
             return 0;
         }
-if (sortBy === 'revision') {
-    const dateA = a.revisionDue ? new Date(a.revisionDue).getTime() : 0;
-    const dateB = b.revisionDue ? new Date(b.revisionDue).getTime() : 0;
-    return dateA - dateB;
-}
+        if (sortBy === 'revision') {
+            const dateA = a.revisionDue ? new Date(a.revisionDue).getTime() : 0;
+            const dateB = b.revisionDue ? new Date(b.revisionDue).getTime() : 0;
+            return dateA - dateB;
+        }
         if (sortBy === 'starred') {
             // Starred items come first
             if (a.starred && !b.starred) return -1;
             if (!a.starred && b.starred) return 1;
             return 0;
         }
-        
+
         // Default / 'none': returns 0 to preserve original creation order
-        return 0; 
+        return 0;
     });
 
     const totalItems = filtered.length;
@@ -861,7 +861,7 @@ if (sortBy === 'revision') {
     if (currentPage > totalPages) currentPage = totalPages;
 
     document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages} (${totalItems})`;
-    
+
     document.getElementById("prevPageBtn").disabled = currentPage === 1;
     document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
     document.getElementById("fastPrevBtn").disabled = currentPage === 1;
@@ -886,21 +886,21 @@ if (sortBy === 'revision') {
         }
 
         const diff = new Date(p.revisionDue) - new Date();
-        const daysLeft = Math.ceil(diff / 86400000); 
+        const daysLeft = Math.ceil(diff / 86400000);
         const dayLabel = Math.abs(daysLeft) === 1 ? "day" : "days";
-        
-        let difficultyColor = p.difficulty === "Medium" ? "#f39c12" : p.difficulty === "Hard" ? "#e74c3c" : "#27ae60"; 
-        
-        let revisionColor = "#27ae60"; 
+
+        let difficultyColor = p.difficulty === "Medium" ? "#f39c12" : p.difficulty === "Hard" ? "#e74c3c" : "#27ae60";
+
+        let revisionColor = "#27ae60";
         let revisionText = `${daysLeft} ${dayLabel}`;
         if (daysLeft < 0) {
-             revisionColor = "#e74c3c"; 
-             revisionText = `${Math.abs(daysLeft)} ${dayLabel} ago`;
+            revisionColor = "#e74c3c";
+            revisionText = `${Math.abs(daysLeft)} ${dayLabel} ago`;
         } else if (daysLeft <= 1) {
-             revisionColor = "#e67e22"; 
+            revisionColor = "#e67e22";
         }
 
-        const hasNotes = p.conceptNotes || p.code || p.notes; 
+        const hasNotes = p.conceptNotes || p.code || p.notes;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -926,21 +926,22 @@ if (sortBy === 'revision') {
     });
 }
 
-window.renewRevision = async (id) => { 
-    if(!currentUser) return; 
-    const problem = allProblems.find(p => p.id === id); 
-    if(!problem) return; 
-    
-    const intervalDays = 7; 
-    const nextDate = new Date(); 
-    nextDate.setDate(nextDate.getDate() + intervalDays); 
+window.renewRevision = async (id) => {
+    if (!currentUser) return;
+    const problem = allProblems.find(p => p.id === id);
+    if (!problem) return;
+
+    const intervalDays = 7;
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + intervalDays);
     const currentCount = problem.revisionCount || 0;
-    
-    await updateDoc(doc(db, "users", currentUser.uid, "problems", id), { 
-        revisionDue: nextDate.toISOString(), 
+
+    await setDoc(doc(db, "users", currentUser.uid, "problems", id), {
+        revisionDue: nextDate.toISOString(),
         revisionCount: currentCount + 1,
-        updatedAt: new Date()
-    }); 
+        isGlobalRef: problem.isGlobal ? true : false,
+        updatedAt: new Date().toISOString()
+    }, { merge: true });
 };
 
 /* =========================================
@@ -953,7 +954,7 @@ function loadWikiNotes() {
     getDoc(settingsRef).then((docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
-            wikiTopicOrder = data.topicOrder || data.order || []; 
+            wikiTopicOrder = data.topicOrder || data.order || [];
             wikiSubtopicOrder = data.subtopicOrder || {};
         }
 
@@ -967,10 +968,10 @@ function loadWikiNotes() {
 
 window.viewWikiNote = (note) => {
     currentNoteId = note.id;
-    
+
     document.getElementById("popupWikiTopic").textContent = note.topic || "Uncategorized";
     document.getElementById("popupWikiTitle").textContent = note.subtopic || "Untitled Note";
-    
+
     let noteContent = note.textNotes || "<p style='color:#666; font-style:italic;'>No notes added.</p>";
     noteContent = noteContent.replace(/<a /g, '<a target="_blank" ');
     document.getElementById("popupWikiNotes").innerHTML = noteContent;
@@ -999,8 +1000,8 @@ window.editCurrentWiki = () => {
     document.getElementById('wikiTopic').value = note.topic || "";
     document.getElementById('wikiSubtopic').value = note.subtopic || "";
     document.getElementById('wikiTextNotes').innerHTML = note.textNotes || "";
-    
-    if(wikiEditor) {
+
+    if (wikiEditor) {
         const code = note.code ?? note.content ?? "";
         wikiEditor.setValue(code);
         setTimeout(() => wikiEditor.layout(), 50);
@@ -1016,18 +1017,18 @@ window.closeWikiEditModal = () => {
 window.createNewNote = () => {
     currentNoteId = null;
     document.getElementById("wikiEditModal").style.display = "flex";
-    
+
     document.getElementById('wikiTopic').value = "";
     document.getElementById('wikiSubtopic').value = "";
     document.getElementById('wikiTextNotes').innerHTML = "";
-    
+
     // NEW: Load Draft for Wiki
     loadWikiDraft();
 
-    if(wikiEditor) {
+    if (wikiEditor) {
         // Only set default if draft didn't populate code
         if (!wikiEditor.getValue() || wikiEditor.getValue().trim() === "") {
-             wikiEditor.setValue("// Code implementation goes here...");
+            wikiEditor.setValue("// Code implementation goes here...");
         }
         setTimeout(() => wikiEditor.layout(), 50);
     }
@@ -1046,28 +1047,28 @@ window.saveWikiNote = async () => {
     const codeContent = wikiEditor ? wikiEditor.getValue() : "";
 
     const data = {
-        topic: topic, subtopic: subtopic, title: subtopic, 
+        topic: topic, subtopic: subtopic, title: subtopic,
         textNotes: textNotes, code: codeContent, updatedAt: new Date().toISOString()
     };
-    
+
     try {
         const ref = collection(db, "users", currentUser.uid, "wiki");
         let noteToView = { ...data };
-        
+
         if (currentNoteId) {
             await updateDoc(doc(ref, currentNoteId), data);
             noteToView.id = currentNoteId;
-        } else { 
-            const docRef = await addDoc(ref, data); 
+        } else {
+            const docRef = await addDoc(ref, data);
             currentNoteId = docRef.id;
             noteToView.id = docRef.id;
         }
-        
+
         showSaveStatus("Saved successfully!");
         // CLEAR DRAFT ON SUCCESS
         localStorage.removeItem(DRAFT_KEY_WIKI);
 
-        loadWikiNotes(); 
+        loadWikiNotes();
         window.closeWikiEditModal();
         window.viewWikiNote(noteToView);
 
@@ -1076,7 +1077,7 @@ window.saveWikiNote = async () => {
 
 window.filterWikiList = () => {
     const query = document.getElementById("wikiSearch").value.toLowerCase();
-    const filtered = allWikiNotes.filter(n => (n.topic||"").toLowerCase().includes(query) || (n.subtopic||"").toLowerCase().includes(query));
+    const filtered = allWikiNotes.filter(n => (n.topic || "").toLowerCase().includes(query) || (n.subtopic || "").toLowerCase().includes(query));
     renderWikiList(filtered);
 };
 
@@ -1085,7 +1086,7 @@ async function saveWikiPreferences() {
     if (!currentUser) return;
     try {
         const settingsRef = doc(db, "users", currentUser.uid, "settings", "wikiPref");
-        await setDoc(settingsRef, { 
+        await setDoc(settingsRef, {
             topicOrder: wikiTopicOrder,
             subtopicOrder: wikiSubtopicOrder
         }, { merge: true });
@@ -1104,7 +1105,7 @@ function addDragHandlers(el, type, id, parentId = null) {
         document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     });
     el.addEventListener('dragover', (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         el.classList.add('drag-over');
     });
     el.addEventListener('dragleave', () => { el.classList.remove('drag-over'); });
@@ -1114,10 +1115,10 @@ function addDragHandlers(el, type, id, parentId = null) {
         const dataStr = e.dataTransfer.getData('text/plain');
         if (!dataStr) return;
         const srcData = JSON.parse(dataStr);
-        if (srcData.type !== type) return; 
-        if (type === 'topic') handleTopicDrop(srcData.id, id); 
+        if (srcData.type !== type) return;
+        if (type === 'topic') handleTopicDrop(srcData.id, id);
         else if (type === 'subtopic') {
-            if (srcData.parentId !== parentId) return; 
+            if (srcData.parentId !== parentId) return;
             handleSubtopicDrop(parentId, srcData.id, id);
         }
     });
@@ -1150,7 +1151,7 @@ function renderWikiList(notes) {
     list.innerHTML = "";
     const grouped = {};
     notes.forEach(note => {
-        const topic = (note.topic || "UNCATEGORIZED").trim(); 
+        const topic = (note.topic || "UNCATEGORIZED").trim();
         const key = topic.toUpperCase();
         if (!grouped[key]) grouped[key] = { name: topic, notes: [] };
         grouped[key].notes.push(note);
@@ -1245,25 +1246,25 @@ window.closeConfirmModal = () => {
     document.getElementById('confirmModal').style.display = 'none';
     pendingDeleteAction = null;
 };
-window.deleteProblem = (id) => { 
+window.deleteProblem = (id) => {
     const p = allProblems.find(x => x.id === id);
-    if(p && p.isGlobal && !isAdmin) {
+    if (p && p.isGlobal && !isAdmin) {
         alert("You cannot delete a global problem.");
         return;
     }
     window.showConfirm("Are you sure you want to delete this problem? This cannot be undone.", async () => {
-        if(p && p.isGlobal && isAdmin) {
+        if (p && p.isGlobal && isAdmin) {
             await deleteDoc(doc(db, "global_problems", id));
             // Optional: delete user references? Firebase keeps it orphaned, which is fine, processAndRender ignores orphans or we can handle it.
         }
         await deleteDoc(doc(db, "users", currentUser.uid, "problems", id));
     });
 };
-window.deleteWikiNote = async () => { 
+window.deleteWikiNote = async () => {
     if (!currentNoteId) return;
     window.showConfirm("Are you sure you want to delete this note? It will be lost forever.", async () => {
-        await deleteDoc(doc(db, "users", currentUser.uid, "wiki", currentNoteId)); 
-        window.createNewNote(); 
+        await deleteDoc(doc(db, "users", currentUser.uid, "wiki", currentNoteId));
+        window.createNewNote();
     });
 };
 window.toggleStar = async (id, current) => { await updateDoc(doc(db, "users", currentUser.uid, "problems", id), { starred: !current }); };
@@ -1271,11 +1272,11 @@ window.viewNote = (id) => {
     const p = allProblems.find(x => x.id === id);
     if (!p) return;
     const splitWrapper = document.getElementById('modalSplit');
-    if(splitWrapper) splitWrapper.classList.remove('layout-stacked');
+    if (splitWrapper) splitWrapper.classList.remove('layout-stacked');
     const notePanel = document.getElementById('modalNotesPanel');
     const codePanel = document.getElementById('modalCodePanel');
-    if(notePanel) notePanel.classList.remove('collapsed');
-    if(codePanel) codePanel.classList.remove('collapsed');
+    if (notePanel) notePanel.classList.remove('collapsed');
+    if (codePanel) codePanel.classList.remove('collapsed');
     let noteContent = p.conceptNotes || "<p style='color:#666; font-style:italic;'>No concept notes added.</p>";
     noteContent = noteContent.replace(/<a /g, '<a target="_blank" ');
     document.getElementById("modalTextDisplay").innerHTML = noteContent;
@@ -1292,11 +1293,11 @@ window.editProblem = (id) => {
     const p = allProblems.find(x => x.id === id);
     if (!p) return;
     editId = id;
-    
+
     // Set Values
     document.getElementById("problem").value = p.problem;
     document.getElementById("difficulty").value = p.difficulty;
-    
+
     // Disable inputs if it's a global problem and user is NOT admin
     const isGlobalAndNotAdmin = (p.isGlobal && !isAdmin);
     document.getElementById("problem").disabled = isGlobalAndNotAdmin;
@@ -1304,24 +1305,24 @@ window.editProblem = (id) => {
     document.getElementById("difficulty").disabled = isGlobalAndNotAdmin;
     document.getElementById("practiceLinkInput").disabled = isGlobalAndNotAdmin;
     document.getElementById("addPracticeLinkBtn").disabled = isGlobalAndNotAdmin;
-    
+
     // Hide global checkbox when editing
     const globalCheck = document.getElementById("adminGlobalCheck");
-    if(globalCheck) globalCheck.style.display = "none";
+    if (globalCheck) globalCheck.style.display = "none";
     document.getElementById("tags").value = (p.tags || []).join(", ");
-    document.getElementById("problemTextNotes").innerHTML = p.conceptNotes || ""; 
-    
+    document.getElementById("problemTextNotes").innerHTML = p.conceptNotes || "";
+
     currentPracticeLinks = p.practiceLinks || [];
     renderPracticeLinksPreview();
 
     // Open Modal
     toggleAddMode(true);
-    
+
     // Set Monaco Value *after* opening modal
-    const codeToLoad = p.code ?? p.notes ?? ""; 
-    if(monacoEditor) { 
-        monacoEditor.setValue(codeToLoad); 
-        setTimeout(() => monacoEditor.layout(), 100); 
+    const codeToLoad = p.code ?? p.notes ?? "";
+    if (monacoEditor) {
+        monacoEditor.setValue(codeToLoad);
+        setTimeout(() => monacoEditor.layout(), 100);
     }
 };
 
