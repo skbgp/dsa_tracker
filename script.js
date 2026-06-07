@@ -574,7 +574,6 @@ document.addEventListener("click", (e) => {
    TRACKER LOGIC (NEW: MODAL HANDLING)
    ========================================= */
 const sortPanel = document.getElementById("sortPanel");
-const problemModal = document.getElementById("problemModal");
 const openAddFormBtn = document.getElementById("openAddFormBtn");
 const toggleSortBtn = document.getElementById("toggleSortBtn");
 
