@@ -179,7 +179,7 @@ function enableAutoLinking(editorId) {
 /* =========================================
    GLOBAL STATE & AUTH
    ========================================= */
-const ADMIN_EMAIL = "shubham@gmail.com"; // Change to your exact Google email
+const ADMIN_EMAIL = "shubhamkr.590@gmail.com";
 let isAdmin = false;
 let globalProblemsList = [];
 let userProblemsMap = {};
