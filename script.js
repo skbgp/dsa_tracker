@@ -201,7 +201,18 @@ let expandedTopics = {};
 document.addEventListener('DOMContentLoaded', () => {
     const googleBtn = document.getElementById("googleBtn");
     const logoutBtn = document.getElementById("logoutBtn");
-    if (googleBtn) googleBtn.onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { console.error(err); } };
+    if (googleBtn) {
+        googleBtn.onclick = async () => { 
+            try { 
+                await signInWithPopup(auth, new GoogleAuthProvider()); 
+            } catch (err) { 
+                console.error(err); 
+                const msg = document.getElementById("auth-message");
+                if (msg) msg.textContent = "Login Failed: " + err.message;
+                else alert("Login Failed: " + err.message);
+            } 
+        };
+    }
     if (logoutBtn) logoutBtn.onclick = async () => signOut(auth);
     const darkModeBtn = document.getElementById("darkModeToggle");
     if (darkModeBtn) {
