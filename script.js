@@ -936,12 +936,25 @@ window.renewRevision = async (id) => {
     nextDate.setDate(nextDate.getDate() + intervalDays);
     const currentCount = problem.revisionCount || 0;
 
-    await setDoc(doc(db, "users", currentUser.uid, "problems", id), {
-        revisionDue: nextDate.toISOString(),
-        revisionCount: currentCount + 1,
-        isGlobalRef: problem.isGlobal ? true : false,
-        updatedAt: new Date().toISOString()
-    }, { merge: true });
+    try {
+        await setDoc(doc(db, "users", currentUser.uid, "problems", id), {
+            revisionDue: nextDate.toISOString(),
+            revisionCount: currentCount + 1,
+            isGlobalRef: problem.isGlobal ? true : false,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        
+        // Visual feedback
+        const btn = event.currentTarget;
+        if (btn) {
+            const originalColor = btn.style.color;
+            btn.style.color = "#3498db"; // Flash blue
+            setTimeout(() => btn.style.color = originalColor, 500);
+        }
+    } catch (e) {
+        console.error("Failed to renew:", e);
+        alert("Failed to renew: " + e.message);
+    }
 };
 
 /* =========================================
