@@ -184,6 +184,7 @@ let isAdmin = false;
 let globalProblemsList = [];
 let userProblemsMap = {};
 let currentUser = null;
+window.db = db; // Expose to console for migration script
 let editId = null;
 let allProblems = [];
 let allTags = [];
@@ -385,7 +386,8 @@ onAuthStateChanged(auth, (user) => {
     const welcomeText = document.getElementById("welcome-text");
     if (user) {
         currentUser = user;
-isAdmin = (user.email === ADMIN_EMAIL);
+        window.currentUser = user; // Expose for migration
+        isAdmin = (user.email === ADMIN_EMAIL);
         if(authSection) authSection.style.display = "none";
         if(appSection) appSection.style.display = "block";
         if(welcomeText) welcomeText.textContent = `Hi, ${user.displayName || 'User'}`;
