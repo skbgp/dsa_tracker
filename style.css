@@ -162,6 +162,7 @@ td { background: white; }
 .star-cell button.starred { color: #fcc419; }
 .star-cell button:not(.starred) { color: #dee2e6; }
 .action-cell { white-space: nowrap; text-align: center; min-width: 120px; }
+.tag-group-header td { background-color: #f8f9fa; font-weight: bold; padding: 10px 15px; color: #333; text-align: left; border-bottom: 2px solid #eee; }
 
 #wiki-view { display: flex; flex-grow: 1; height: 78vh; border: 1px solid #e9ecef; border-radius: 8px; overflow: hidden; background: white; }
 .wiki-sidebar { width: 280px; background: #f8f9fa; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; flex-shrink: 0; }
@@ -232,6 +233,7 @@ body.dark .google-btn:hover { background: #333; }
 body.dark .top-header, body.dark th, body.dark .wiki-header, body.dark .wiki-search-box, body.dark #wiki-view, body.dark .wiki-main, body.dark .table-responsive, body.dark .monaco-container, body.dark .wiki-editor-container, body.dark #sortPanel { background: #1e1e1e; border-color: #333; color: #e0e0e0; }
 
 body.dark td, body.dark .wiki-sidebar { background: #1e1e1e; border-color: #333; color: #ccc; }
+body.dark .tag-group-header td { background-color: #252526; color: #ccc; border-color: #444; }
 body.dark input, body.dark select, body.dark textarea { background: #252526; border-color: #444; color: #fff; }
 body.dark .secondary-btn { background: #333; color: #ccc; }
 body.dark .wiki-topic-header { background: #252526; color: #888; border-color: #333; }

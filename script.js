@@ -877,7 +877,8 @@ if (sortBy === 'revision') {
             const currentTag = (p.tags && p.tags[0]) ? p.tags[0].toUpperCase() : "UNTAGGED";
             if (currentTag !== lastTag) {
                 const headerTr = document.createElement("tr");
-                headerTr.innerHTML = `<td colspan="9" style="background-color: var(--secondary-bg, #f8f9fa); font-weight: bold; padding: 10px 15px; color: var(--text-main, #333); text-align: left; border-bottom: 2px solid var(--border-color, #eee);">
+                headerTr.className = "tag-group-header";
+                headerTr.innerHTML = `<td colspan="9">
                     <i class="fa-regular fa-folder-open" style="margin-right:8px; color:#3498db;"></i> ${currentTag}
                 </td>`;
                 tableBody.appendChild(headerTr);
