@@ -465,7 +465,7 @@ function renderPracticeLinksPreview() {
     currentPracticeLinks.forEach((link, index) => {
         const div = document.createElement("div");
         div.style.marginBottom = "4px";
-        div.innerHTML = `<span>${getWebsiteName(link)}</span> <button type="button" onclick="removePracticeLink(${index})" style="color:red; background:none; padding:0 5px; margin-left:5px;"><i class="fa-solid fa-xmark"></i></button>`;
+        div.innerHTML = `<span>${getWebsiteName(link)}</span> <button type="button" onclick="window.removePracticeLink(${index})" style="color:red; background:none; padding:0 5px; margin-left:5px;"><i class="fa-solid fa-xmark"></i></button>`;
         container.appendChild(div);
     });
 }
@@ -907,19 +907,19 @@ function renderTable() {
             <td style="font-weight:bold; color:#777;">#${p.serialNo}</td>
             <td>${p.problem}</td>
             <td style="color:${difficultyColor};">${p.difficulty}</td>
-            <td>${hasNotes ? `<button onclick="viewNote('${p.id}')"><i class="fa-regular fa-eye"></i></button>` : "-"}</td>
+            <td>${hasNotes ? `<button onclick="window.viewNote('${p.id}')"><i class="fa-regular fa-eye"></i></button>` : "-"}</td>
             <td>${(p.tags || []).join(", ")}</td>
             <td style="color:${revisionColor}; white-space:nowrap;">
                 ${revisionText}
-                <button onclick="renewRevision('${p.id}')" title="Reset Timer (+7 days)" style="color:#27ae60; background:none; padding:0 5px; cursor:pointer;">
+                <button onclick="window.renewRevision('${p.id}')" title="Reset Timer (+7 days)" style="color:#27ae60; background:none; padding:0 5px; cursor:pointer;">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </td>
             <td>${(p.practiceLinks || []).map(l => `<a href="${l}" target="_blank">${getWebsiteName(l)}</a>`).join(", ")}</td>
-            <td class="star-cell"><button class="${p.starred ? "starred" : ""}" onclick="toggleStar('${p.id}', ${p.starred})">${p.starred ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>'}</button></td>
+            <td class="star-cell"><button class="${p.starred ? "starred" : ""}" onclick="window.toggleStar('${p.id}', ${p.starred})">${p.starred ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>'}</button></td>
             <td class="action-cell">
-                ${(!p.isGlobal || isAdmin) ? `<button class="edit-btn" onclick="editProblem('${p.id}')"><i class="fa-solid fa-pen-to-square"></i></button>` : ''}
-                ${(!p.isGlobal || isAdmin) ? `<button class="delete-btn" onclick="deleteProblem('${p.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+                ${(!p.isGlobal || isAdmin) ? `<button class="edit-btn" onclick="window.editProblem('${p.id}')"><i class="fa-solid fa-pen-to-square"></i></button>` : ''}
+                ${(!p.isGlobal || isAdmin) ? `<button class="delete-btn" onclick="window.deleteProblem('${p.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
             </td>
         `;
         tableBody.appendChild(tr);
