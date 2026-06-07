@@ -198,7 +198,7 @@ let wikiTopicOrder = [];
 let wikiSubtopicOrder = {}; 
 let expandedTopics = {}; 
 
-document.addEventListener('DOMContentLoaded', () => {
+// Initialization Logic
     const googleBtn = document.getElementById("googleBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     if (googleBtn) {
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const wNotes = document.getElementById('wikiTextNotes');
     if(wNotes) wNotes.addEventListener('input', saveWikiDraft);
-});
+// });
 
 /* =========================================
    DRAFT LOGIC (Persistence) - FIXED
