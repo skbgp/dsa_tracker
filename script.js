@@ -673,7 +673,7 @@ function processAndRenderProblems() {
             createdAt: g.createdAt,
             starred: u.starred || false,
             conceptNotes: u.conceptNotes || "", code: u.code || "",
-            revisionDue: u.revisionDue || new Date().toISOString(),
+            revisionDue: u.revisionDue || new Date(Date.now() + 7 * 86400000).toISOString(),
             revisionCount: u.revisionCount || 0
         };
         allProblems.push(p);
