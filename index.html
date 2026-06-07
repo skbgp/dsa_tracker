@@ -59,8 +59,8 @@
 
                         <span style="font-size:14px; font-weight:600; color:#666; margin-left:10px;">Sort:</span>
                         <select id="sortBySelect" class="sort-select">
-                            <option value="none" selected>None</option>
-                            <option value="tag">Tag</option>
+                            <option value="none">None</option>
+                            <option value="tag" selected>Topic / Tag (Default)</option>
                             <option value="revision">Revision Due Soon</option>
                             <option value="starred">Starred First</option>
                         </select>
@@ -138,7 +138,13 @@
             </div>
 
             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:15px;">
-                <input id="problem" placeholder="Problem Name" style="margin-bottom:0;" />
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <input id="problem" placeholder="Problem Name" style="margin-bottom:0;" />
+                    <div id="adminGlobalCheck" style="display:none; align-items:center; font-size:12px; color:#e74c3c; font-weight:bold;">
+                        <input type="checkbox" id="isGlobalProblem" checked style="margin:0 5px 0 0; cursor:pointer;" /> 
+                        <label for="isGlobalProblem" style="cursor:pointer;">Publish as Global Problem</label>
+                    </div>
+                </div>
                 
                 <div class="input-wrapper" style="margin-bottom:0;">
                     <input id="tags" placeholder="Tags (comma separated)" autocomplete="off" style="margin-bottom:0;" />

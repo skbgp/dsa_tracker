@@ -179,6 +179,10 @@ function enableAutoLinking(editorId) {
 /* =========================================
    GLOBAL STATE & AUTH
    ========================================= */
+const ADMIN_EMAIL = "shubham@gmail.com"; // Change to your exact Google email
+let isAdmin = false;
+let globalProblemsList = [];
+let userProblemsMap = {};
 let currentUser = null;
 let editId = null;
 let allProblems = [];
@@ -374,6 +378,7 @@ onAuthStateChanged(auth, (user) => {
     const welcomeText = document.getElementById("welcome-text");
     if (user) {
         currentUser = user;
+isAdmin = (user.email === ADMIN_EMAIL);
         if(authSection) authSection.style.display = "none";
         if(appSection) appSection.style.display = "block";
         if(welcomeText) welcomeText.textContent = `Hi, ${user.displayName || 'User'}`;
@@ -571,6 +576,17 @@ function toggleAddMode(show) {
     if (show) {
         sortPanel.style.display = "none"; // Close sort
         problemModal.style.display = "flex"; // Open modal
+        const globalCheck = document.getElementById("adminGlobalCheck");
+        if (globalCheck) {
+            globalCheck.style.display = (isAdmin && !editId) ? "flex" : "none";
+        }
+        
+        // Reset inputs disabled state
+        document.getElementById("problem").disabled = false;
+        document.getElementById("tags").disabled = false;
+        document.getElementById("difficulty").disabled = false;
+        document.getElementById("practiceLinkInput").disabled = false;
+        document.getElementById("addPracticeLinkBtn").disabled = false;
         
         if (!editId) {
             // 1. Clear fields FIRST
@@ -636,28 +652,77 @@ function getSafeTime(dateVal) {
     return new Date(dateVal).getTime();
 }
 
+function processAndRenderProblems() {
+    allProblems = [];
+    allTags = [];
+
+    globalProblemsList.forEach(g => {
+        const u = userProblemsMap[g.id] || {};
+        const p = {
+            id: g.id, isGlobal: true,
+            problem: g.problem, difficulty: g.difficulty,
+            tags: g.tags || [], practiceLinks: g.practiceLinks || [],
+            createdAt: g.createdAt,
+            starred: u.starred || false,
+            conceptNotes: u.conceptNotes || "", code: u.code || "",
+            revisionDue: u.revisionDue || g.createdAt,
+            revisionCount: u.revisionCount || 0
+        };
+        allProblems.push(p);
+        p.tags.forEach(t => allTags.push(t));
+    });
+
+    Object.values(userProblemsMap).forEach(u => {
+        if (!u.isGlobalRef) {
+            const p = {
+                id: u.id, isGlobal: false,
+                problem: u.problem, difficulty: u.difficulty,
+                tags: u.tags || [], practiceLinks: u.practiceLinks || [],
+                createdAt: u.createdAt,
+                starred: u.starred || false,
+                conceptNotes: u.conceptNotes || "", code: u.code || "",
+                revisionDue: u.revisionDue || u.createdAt,
+                revisionCount: u.revisionCount || 0
+            };
+            allProblems.push(p);
+            p.tags.forEach(t => allTags.push(t));
+        }
+    });
+
+    allProblems.sort((a, b) => getSafeTime(a.createdAt) - getSafeTime(b.createdAt));
+    allProblems.forEach((p, idx) => p.serialNo = idx + 1);
+    allTags = [...new Set(allTags)];
+    renderTable();
+}
+
+let globalUnsub = null;
+let userUnsub = null;
+
 function loadProblems() {
     if(!currentUser) return;
-    const ref = collection(db, "users", currentUser.uid, "problems");
-    onSnapshot(ref, (snap) => {
-        allProblems = []; allTags = [];
-        snap.forEach((d) => {
-            const p = { id: d.id, ...d.data() };
-            if (!p.createdAt) p.createdAt = p.updatedAt || 0; 
-            allProblems.push(p);
-            (p.tags || []).forEach((tag) => allTags.push(tag));
+    
+    // Global problems
+    const globalRef = collection(db, "global_problems");
+    if(globalUnsub) globalUnsub();
+    globalUnsub = onSnapshot(globalRef, (snap) => {
+        globalProblemsList = [];
+        snap.forEach(d => {
+            const data = d.data();
+            globalProblemsList.push({ id: d.id, ...data });
         });
+        processAndRenderProblems();
+    });
 
-        // Default sort: Oldest creation first
-        allProblems.sort((a, b) => {
-            const timeA = getSafeTime(a.createdAt);
-            const timeB = getSafeTime(b.createdAt);
-            return timeA - timeB; 
+    // User problems
+    const userRef = collection(db, "users", currentUser.uid, "problems");
+    if(userUnsub) userUnsub();
+    userUnsub = onSnapshot(userRef, (snap) => {
+        userProblemsMap = {};
+        snap.forEach(d => {
+            const data = d.data();
+            userProblemsMap[d.id] = { id: d.id, ...data };
         });
-
-        allProblems.forEach((p, index) => { p.serialNo = index + 1; });
-        allTags = [...new Set(allTags)];
-        renderTable();
+        processAndRenderProblems();
     });
 }
 
@@ -674,41 +739,63 @@ if (saveBtn) {
         const difficultySelect = document.getElementById("difficulty");
         const notesInput = document.getElementById("problemTextNotes");
         const cleanTags = tagsInput.value.split(",").map((t) => t.trim()).filter(Boolean);
+        const isGlobalCheck = document.getElementById("isGlobalProblem");
         
         const baseData = {
             problem: problemInput.value.trim(),
             difficulty: difficultySelect.value,
-            conceptNotes: notesInput.innerHTML, 
-            code: getMonacoValue(),
             practiceLinks: currentPracticeLinks, 
             tags: cleanTags,
             updatedAt: new Date().toISOString()
         };
 
+        const userData = {
+            conceptNotes: notesInput.innerHTML, 
+            code: getMonacoValue(),
+            updatedAt: new Date().toISOString()
+        };
+
         try {
-            const ref = collection(db, "users", currentUser.uid, "problems");
+            const userRef = collection(db, "users", currentUser.uid, "problems");
+            const globalRef = collection(db, "global_problems");
+
             if (editId) {
-                // EDIT
-                const docSnap = await getDoc(doc(ref, editId));
-                const currentData = docSnap.data();
-                const updatePayload = { ...baseData };
-                
-                if (!currentData.createdAt) {
-                    updatePayload.createdAt = currentData.updatedAt || new Date().toISOString();
+                const p = allProblems.find(x => x.id === editId);
+                // UPDATE
+                if (p.isGlobal) {
+                    if (isAdmin) await updateDoc(doc(globalRef, editId), baseData);
+                    userData.isGlobalRef = true;
+                    // Fix: SetDoc with merge in case user doc doesn't exist yet
+                    await setDoc(doc(userRef, editId), userData, { merge: true });
+                } else {
+                    // Custom user problem
+                    await updateDoc(doc(userRef, editId), { ...baseData, ...userData });
                 }
-                
-                await updateDoc(doc(ref, editId), updatePayload); 
             } else {
                 // ADD
                 const revisionDate = new Date();
                 revisionDate.setDate(revisionDate.getDate() + 7);
-                await addDoc(ref, { 
-                    ...baseData, 
-                    createdAt: new Date().toISOString(), 
-                    starred: false, 
-                    revisionCount: 0, 
-                    revisionDue: revisionDate.toISOString() 
-                });
+                
+                const addGlobal = isAdmin && isGlobalCheck && isGlobalCheck.checked;
+                
+                if (addGlobal) {
+                    const docRef = await addDoc(globalRef, { ...baseData, createdAt: new Date().toISOString() });
+                    userData.isGlobalRef = true;
+                    userData.starred = false;
+                    userData.revisionCount = 0;
+                    userData.revisionDue = revisionDate.toISOString();
+                    await setDoc(doc(userRef, docRef.id), userData);
+                } else {
+                    await addDoc(userRef, { 
+                        ...baseData, 
+                        ...userData,
+                        isGlobalRef: false,
+                        createdAt: new Date().toISOString(), 
+                        starred: false, 
+                        revisionCount: 0, 
+                        revisionDue: revisionDate.toISOString() 
+                    });
+                }
             }
             // CLEAR DRAFT ON SUCCESS
             localStorage.removeItem(DRAFT_KEY_PROBLEM);
@@ -775,7 +862,21 @@ if (sortBy === 'revision') {
 
     const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
+    let lastTag = null;
+
     pageItems.forEach((p) => {
+        if (sortBy === 'tag') {
+            const currentTag = (p.tags && p.tags[0]) ? p.tags[0].toUpperCase() : "UNTAGGED";
+            if (currentTag !== lastTag) {
+                const headerTr = document.createElement("tr");
+                headerTr.innerHTML = `<td colspan="9" style="background-color: var(--secondary-bg, #f8f9fa); font-weight: bold; padding: 10px 15px; color: var(--text-main, #333); text-align: left; border-bottom: 2px solid var(--border-color, #eee);">
+                    <i class="fa-regular fa-folder-open" style="margin-right:8px; color:#3498db;"></i> ${currentTag}
+                </td>`;
+                tableBody.appendChild(headerTr);
+                lastTag = currentTag;
+            }
+        }
+
         const diff = new Date(p.revisionDue) - new Date();
         const daysLeft = Math.ceil(diff / 86400000); 
         const dayLabel = Math.abs(daysLeft) === 1 ? "day" : "days";
@@ -1137,9 +1238,19 @@ window.closeConfirmModal = () => {
     pendingDeleteAction = null;
 };
 window.deleteProblem = (id) => { 
+    const p = allProblems.find(x => x.id === id);
+    if(p && p.isGlobal && !isAdmin) {
+        alert("You cannot delete a global problem.");
+        return;
+    }
     window.showConfirm("Are you sure you want to delete this problem? This cannot be undone.", async () => {
+        if(p && p.isGlobal && isAdmin) {
+            await deleteDoc(doc(db, "global_problems", id));
+            // Optional: delete user references? Firebase keeps it orphaned, which is fine, processAndRender ignores orphans or we can handle it.
+        }
         await deleteDoc(doc(db, "users", currentUser.uid, "problems", id));
     });
+}
 };
 window.deleteWikiNote = async () => { 
     if (!currentNoteId) return;
@@ -1178,6 +1289,18 @@ window.editProblem = (id) => {
     // Set Values
     document.getElementById("problem").value = p.problem;
     document.getElementById("difficulty").value = p.difficulty;
+    
+    // Disable inputs if it's a global problem and user is NOT admin
+    const isGlobalAndNotAdmin = (p.isGlobal && !isAdmin);
+    document.getElementById("problem").disabled = isGlobalAndNotAdmin;
+    document.getElementById("tags").disabled = isGlobalAndNotAdmin;
+    document.getElementById("difficulty").disabled = isGlobalAndNotAdmin;
+    document.getElementById("practiceLinkInput").disabled = isGlobalAndNotAdmin;
+    document.getElementById("addPracticeLinkBtn").disabled = isGlobalAndNotAdmin;
+    
+    // Hide global checkbox when editing
+    const globalCheck = document.getElementById("adminGlobalCheck");
+    if(globalCheck) globalCheck.style.display = "none";
     document.getElementById("tags").value = (p.tags || []).join(", ");
     document.getElementById("problemTextNotes").innerHTML = p.conceptNotes || ""; 
     
