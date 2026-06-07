@@ -841,9 +841,8 @@ let filtered = allProblems.filter(p => {
             return 0;
         }
 if (sortBy === 'revision') {
-    // FIX: Handle invalid dates safely
-    const dateA = p.revisionDue ? new Date(a.revisionDue).getTime() : 0;
-    const dateB = p.revisionDue ? new Date(b.revisionDue).getTime() : 0;
+    const dateA = a.revisionDue ? new Date(a.revisionDue).getTime() : 0;
+    const dateB = b.revisionDue ? new Date(b.revisionDue).getTime() : 0;
     return dateA - dateB;
 }
         if (sortBy === 'starred') {

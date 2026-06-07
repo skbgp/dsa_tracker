@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Track your DSA progress, build a personal wiki, and master Data Structures & Algorithms with spaced repetition." />
+    <meta name="theme-color" content="#3498db" />
     <title>DSA Tracker & Wiki</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
@@ -137,7 +142,7 @@
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 2fr 1fr 120px; gap:10px; margin-bottom:15px;">
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:15px; align-items: start;">
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <input id="problem" placeholder="Problem Name" style="margin-bottom:0;" />
                     <div id="adminGlobalCheck" style="display:none; align-items:center; justify-content: flex-start; font-size:12px; color:#e74c3c; font-weight:bold; margin-top: 5px;">
@@ -151,7 +156,7 @@
                     <div id="tagInputSuggestionsBox" class="suggestions-dropdown"></div>
                 </div>
 
-                <select id="difficulty" style="margin-bottom:0;">
+                <select id="difficulty" style="margin-bottom:0; height: 38px;">
                     <option value="Easy">Easy</option>
                     <option value="Medium">Medium</option>
                     <option value="Hard">Hard</option>
