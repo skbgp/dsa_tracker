@@ -14,7 +14,7 @@
         <div class="auth-content-wrapper">
             <h1 class="app-title"><i class="fa-solid fa-book-open"></i> DSA Tracker</h1>
             <p class="app-subtitle">Master DSA. Build your personal Wiki.</p>
-            <button id="googleBtn" class="google-btn" title="Sign in with Google Account">
+            <button id="googleBtn" class="google-btn" title="Sign in with Google Account" onclick="window.loginWithGoogle()">
                 <i class="fa-brands fa-google"></i> Sign in with Google
             </button>
             <p id="auth-message"></p>
@@ -38,7 +38,7 @@
                 <button id="darkModeToggle" class="secondary-btn" title="Toggle Dark/Light Mode">
                     <i class="fa-solid fa-moon"></i> Dark
                 </button> 
-                <button id="logoutBtn" class="danger-btn" title="Logout from App">
+                <button id="logoutBtn" class="danger-btn" title="Logout from App" onclick="window.logout()">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </button>
             </div>
