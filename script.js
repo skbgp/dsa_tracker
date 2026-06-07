@@ -910,8 +910,8 @@ function renderTable() {
             <td>${hasNotes ? `<button onclick="window.viewNote('${p.id}')"><i class="fa-regular fa-eye"></i></button>` : "-"}</td>
             <td>${(p.tags || []).join(", ")}</td>
             <td style="color:${revisionColor}; white-space:nowrap;">
-                ${revisionText}
-                <button onclick="window.renewRevision('${p.id}', this)" title="Reset Timer (+7 days)" style="color:#27ae60; background:none; padding:0 5px; cursor:pointer;">
+                ${revisionText} ${p.revisionCount > 0 ? `<span style="font-size:11px; color:#888; margin-left:4px;" title="Total Revisions">(x${p.revisionCount})</span>` : ""}
+                <button onclick="window.renewRevision('${p.id}')" title="Reset Timer (+7 days)" style="color:#27ae60; background:none; padding:0 5px; cursor:pointer;">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </td>
@@ -926,7 +926,7 @@ function renderTable() {
     });
 }
 
-window.renewRevision = async (id, btn) => {
+window.renewRevision = async (id) => {
     if (!currentUser) return;
     const problem = allProblems.find(p => p.id === id);
     if (!problem) return;
@@ -944,12 +944,7 @@ window.renewRevision = async (id, btn) => {
             updatedAt: new Date().toISOString()
         }, { merge: true });
         
-        // Visual feedback
-        if (btn) {
-            const originalColor = btn.style.color;
-            btn.style.color = "#3498db"; // Flash blue
-            setTimeout(() => btn.style.color = originalColor, 500);
-        }
+        console.log(`Revision updated! Count is now ${currentCount + 1}`);
     } catch (e) {
         console.error("Failed to renew:", e);
         alert("Failed to renew: " + e.message);
