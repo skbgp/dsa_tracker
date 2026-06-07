@@ -1256,7 +1256,6 @@ window.deleteProblem = (id) => {
         }
         await deleteDoc(doc(db, "users", currentUser.uid, "problems", id));
     });
-}
 };
 window.deleteWikiNote = async () => { 
     if (!currentNoteId) return;
