@@ -132,14 +132,165 @@ input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 
 .text-display-box ul, .text-display-box ol { padding-left: 20px; margin: 10px 0; }
 .text-display-box a { color: #3498db !important; text-decoration: underline; cursor: pointer; font-weight: 500; }
 
-/* Force pasted rich text to inherit theme colors instead of staying invisible */
-.editor-content *, .text-display-box * {
-    color: inherit !important;
-    background-color: transparent !important;
-    font-family: inherit !important;
+.wiki-editor-container, .monaco-container { flex-grow: 1; width: 100%; height: 100%; border: none; }
+
+/* =========================================
+   MARKDOWN EDITOR (Tabs, Toolbar, Textarea)
+   ========================================= */
+.md-editor-container {
+    display: flex; flex-direction: column; flex-grow: 1;
+    background: white; overflow: hidden; height: 100%;
+}
+.md-tabs {
+    display: flex; gap: 0; background: #f0f2f5; border-bottom: 2px solid #dee2e6;
+    padding: 0 8px;
+}
+.md-tab {
+    padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; background: transparent; color: #6c757d;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+}
+.md-tab:hover { color: #495057; background: rgba(0,0,0,0.03); }
+.md-tab.active {
+    color: #3498db; border-bottom-color: #3498db;
+    background: white;
+}
+.md-toolbar {
+    display: flex; gap: 3px; padding: 6px 10px; background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef; flex-wrap: wrap; align-items: center;
+}
+.md-toolbar button {
+    background: transparent; border: 1px solid transparent; padding: 5px 8px;
+    font-size: 13px; border-radius: 4px; cursor: pointer; color: #6c757d;
+    transition: all 0.15s ease;
+}
+.md-toolbar button:hover {
+    background: #e9ecef; color: #212529; border-color: #ced4da;
+}
+.md-toolbar-divider {
+    width: 1px; height: 20px; background: #dee2e6; margin: 0 4px;
+}
+.md-textarea {
+    flex-grow: 1; padding: 16px; border: none; outline: none; resize: none;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 14px; line-height: 1.7; color: #2c3e50; background: white;
+    min-height: 150px; tab-size: 4;
+}
+.md-textarea::placeholder { color: #adb5bd; font-style: italic; }
+.md-preview {
+    flex-grow: 1; padding: 20px; overflow-y: auto;
+    min-height: 150px; background: white;
 }
 
-.wiki-editor-container, .monaco-container { flex-grow: 1; width: 100%; height: 100%; border: none; }
+/* =========================================
+   MARKDOWN BODY (Rendered Output Styles)
+   ========================================= */
+.markdown-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px; line-height: 1.7; color: #2c3e50;
+    word-wrap: break-word;
+}
+.markdown-body h1 {
+    font-size: 1.8em; font-weight: 700; margin: 20px 0 12px;
+    padding-bottom: 8px; border-bottom: 2px solid #e9ecef;
+    color: #1a202c;
+}
+.markdown-body h2 {
+    font-size: 1.45em; font-weight: 700; margin: 18px 0 10px;
+    padding-bottom: 6px; border-bottom: 1px solid #e9ecef;
+    color: #2d3748;
+}
+.markdown-body h3 {
+    font-size: 1.2em; font-weight: 600; margin: 16px 0 8px;
+    color: #4a5568;
+}
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+    font-size: 1.05em; font-weight: 600; margin: 14px 0 6px;
+    color: #718096;
+}
+.markdown-body p { margin: 0 0 12px; }
+.markdown-body strong { font-weight: 700; color: inherit; }
+.markdown-body em { font-style: italic; }
+.markdown-body a {
+    color: #3498db; text-decoration: none; font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+}
+.markdown-body a:hover {
+    color: #1d6fa5; border-bottom-color: #3498db;
+}
+
+/* Inline code */
+.markdown-body code:not(pre code) {
+    background: #f0f4f8; color: #e74c3c; padding: 2px 6px;
+    border-radius: 4px; font-size: 0.88em;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    border: 1px solid #e2e8f0;
+}
+
+/* Code blocks */
+.markdown-body pre {
+    background: #1e1e2e; color: #cdd6f4; padding: 16px 20px;
+    border-radius: 8px; overflow-x: auto; margin: 14px 0;
+    font-size: 13.5px; line-height: 1.6; border: 1px solid #313244;
+}
+.markdown-body pre code {
+    background: transparent !important; color: inherit;
+    padding: 0; border: none; font-size: inherit;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Blockquotes */
+.markdown-body blockquote {
+    margin: 12px 0; padding: 10px 16px;
+    border-left: 4px solid #3498db;
+    background: #f0f7ff; color: #4a5568;
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+}
+.markdown-body blockquote p { margin: 0; }
+
+/* Lists */
+.markdown-body ul, .markdown-body ol {
+    padding-left: 24px; margin: 8px 0 14px;
+}
+.markdown-body li { margin: 4px 0; }
+.markdown-body li > p { margin: 4px 0; }
+
+/* Task lists (GFM) */
+.markdown-body ul li input[type="checkbox"] {
+    margin-right: 8px; transform: scale(1.1);
+    accent-color: #3498db;
+}
+
+/* Tables */
+.markdown-body table {
+    width: 100%; border-collapse: collapse; margin: 14px 0;
+    font-size: 14px; border-radius: 6px; overflow: hidden;
+}
+.markdown-body thead th {
+    background: #f0f2f5; font-weight: 600;
+    padding: 10px 14px; text-align: left;
+    border: 1px solid #dee2e6; color: #4a5568;
+}
+.markdown-body tbody td {
+    padding: 8px 14px; border: 1px solid #dee2e6;
+}
+.markdown-body tbody tr:nth-child(even) { background: #f8f9fa; }
+.markdown-body tbody tr:hover { background: #e8f4fd; }
+
+/* Horizontal rule */
+.markdown-body hr {
+    border: none; border-top: 2px solid #e9ecef;
+    margin: 20px 0;
+}
+
+/* Images */
+.markdown-body img {
+    max-width: 100%; border-radius: 6px;
+    margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
 /* =========================================
    INLINE STATUS & ERRORS
@@ -273,6 +424,46 @@ body.dark .editor-toolbar button:hover { background: #444; color: white; }
 body.dark .editor-content { color: #e0e0e0; background: #252526; }
 body.dark .editor-content a { color: #64b5f6; }
 body.dark .editor-content a:hover { background-color: #3a2323; }
+
+/* Dark mode: Markdown Editor */
+body.dark .md-editor-container { background: #1e1e1e; }
+body.dark .md-tabs { background: #252526; border-bottom-color: #444; }
+body.dark .md-tab { color: #999; }
+body.dark .md-tab:hover { color: #ccc; background: rgba(255,255,255,0.05); }
+body.dark .md-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; background: #1e1e1e; }
+body.dark .md-toolbar { background: #2d2d2d; border-bottom-color: #444; }
+body.dark .md-toolbar button { color: #999; }
+body.dark .md-toolbar button:hover { background: #444; color: #eee; border-color: #555; }
+body.dark .md-toolbar-divider { background: #444; }
+body.dark .md-textarea { background: #1e1e1e; color: #e0e0e0; }
+body.dark .md-textarea::placeholder { color: #666; }
+body.dark .md-preview { background: #1e1e1e; }
+
+/* Dark mode: Markdown Body */
+body.dark .markdown-body { color: #e0e0e0; }
+body.dark .markdown-body h1 { color: #f0f0f0; border-bottom-color: #444; }
+body.dark .markdown-body h2 { color: #e0e0e0; border-bottom-color: #444; }
+body.dark .markdown-body h3 { color: #ccc; }
+body.dark .markdown-body h4, body.dark .markdown-body h5 { color: #aaa; }
+body.dark .markdown-body a { color: #64b5f6; }
+body.dark .markdown-body a:hover { color: #90caf9; border-bottom-color: #64b5f6; }
+body.dark .markdown-body code:not(pre code) {
+    background: #2d2d2d; color: #f48771; border-color: #444;
+}
+body.dark .markdown-body pre {
+    background: #0d1117; border-color: #30363d;
+}
+body.dark .markdown-body blockquote {
+    background: #1a2332; border-left-color: #64b5f6; color: #b0bec5;
+}
+body.dark .markdown-body thead th {
+    background: #2d2d2d; color: #ccc; border-color: #444;
+}
+body.dark .markdown-body tbody td { border-color: #444; }
+body.dark .markdown-body tbody tr:nth-child(even) { background: #252526; }
+body.dark .markdown-body tbody tr:hover { background: #2a3a4a; }
+body.dark .markdown-body hr { border-top-color: #444; }
+body.dark .text-display-box { background: #1e1e1e; color: #e0e0e0; }
 body.dark tr:not(.tag-group-header):hover td { background: #263238; }
 
 /* Dark mode scrollbar */

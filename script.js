@@ -24,6 +24,244 @@ const DRAFT_KEY_PROBLEM = "dsa_tracker_problem_draft";
 const DRAFT_KEY_WIKI = "dsa_tracker_wiki_draft";
 
 /* =========================================
+   MARKDOWN SETUP (marked.js + highlight.js)
+   ========================================= */
+try {
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        highlight: function(code, lang) {
+            if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
+                try { return hljs.highlight(code, { language: lang }).value; } catch(e) {}
+            }
+            if (typeof hljs !== 'undefined') {
+                try { return hljs.highlightAuto(code).value; } catch(e) {}
+            }
+            return code;
+        }
+    });
+} catch(e) { console.warn('marked init:', e); }
+
+// Detect if content is HTML (legacy notes) vs markdown
+function isHtmlContent(text) {
+    if (!text) return false;
+    const htmlTagPattern = /<(div|p|br|b|i|u|ul|ol|li|span|a|h[1-6]|strong|em|table|tr|td|th)[\s>/]/i;
+    return htmlTagPattern.test(text);
+}
+
+// Convert HTML to Markdown for editing legacy notes
+function htmlToMarkdown(html) {
+    if (!html) return '';
+    let md = html;
+    // Headings
+    md = md.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n');
+    md = md.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n');
+    md = md.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n');
+    md = md.replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n');
+    // Bold / Italic / Underline
+    md = md.replace(/<(strong|b)>(.*?)<\/(strong|b)>/gi, '**$2**');
+    md = md.replace(/<(em|i)>(.*?)<\/(em|i)>/gi, '*$2*');
+    md = md.replace(/<u>(.*?)<\/u>/gi, '$1');
+    // Links
+    md = md.replace(/<a[^>]+href="([^"]*?)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
+    // Lists
+    md = md.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
+    md = md.replace(/<\/?[ou]l[^>]*>/gi, '\n');
+    // Line breaks and paragraphs
+    md = md.replace(/<br\s*\/?>/gi, '\n');
+    md = md.replace(/<\/p>/gi, '\n\n');
+    md = md.replace(/<p[^>]*>/gi, '');
+    md = md.replace(/<\/div>/gi, '\n');
+    md = md.replace(/<div[^>]*>/gi, '');
+    // Strip remaining tags
+    md = md.replace(/<[^>]+>/g, '');
+    // Decode HTML entities
+    md = md.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+    // Cleanup extra blank lines
+    md = md.replace(/\n{3,}/g, '\n\n').trim();
+    return md;
+}
+
+// Render markdown to HTML (with backward compat for legacy HTML notes)
+function renderMarkdownContent(text) {
+    if (!text) return '<p style="color:#666; font-style:italic;">No notes added.</p>';
+    if (isHtmlContent(text)) {
+        // Legacy HTML note - render as-is but make links open in new tab
+        return text.replace(/<a /g, '<a target="_blank" ');
+    }
+    // Markdown note - render with marked.js
+    let html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(text) : text.replace(/\n/g, '<br>');
+    // Make links open in new tab
+    html = html.replace(/<a /g, '<a target="_blank" ');
+    return html;
+}
+
+// Paste handler: convert pasted HTML to markdown automatically
+function setupPasteHandler(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    textarea.addEventListener('paste', (e) => {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const htmlData = clipboardData.getData('text/html');
+        const plainData = clipboardData.getData('text/plain');
+
+        // If there's HTML data and it's different from plain text, convert to markdown
+        if (htmlData && htmlData.trim()) {
+            e.preventDefault();
+            const markdown = htmlToMarkdown(htmlData);
+            // Insert at cursor position
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            textarea.value = before + markdown + after;
+            // Move cursor to end of pasted content
+            const newPos = start + markdown.length;
+            textarea.selectionStart = newPos;
+            textarea.selectionEnd = newPos;
+            textarea.dispatchEvent(new Event('input'));
+        }
+        // If only plain text, let browser handle it normally
+    });
+}
+
+// Tab switching for markdown editor
+window.switchMdTab = (tab, context) => {
+    const ids = {
+        problem: { textarea: 'problemTextNotes', preview: 'problemMdPreview', toolbar: 'problemMdToolbar' },
+        wiki:    { textarea: 'wikiTextNotes',    preview: 'wikiMdPreview',    toolbar: 'wikiMdToolbar' }
+    };
+    const config = ids[context];
+    if (!config) return;
+
+    const textarea = document.getElementById(config.textarea);
+    const preview = document.getElementById(config.preview);
+    const toolbar = document.getElementById(config.toolbar);
+    const container = textarea?.closest('.md-editor-container');
+    if (!container) return;
+
+    // Update tab active states
+    container.querySelectorAll('.md-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    if (tab === 'write') {
+        textarea.style.display = 'block';
+        preview.style.display = 'none';
+        if (toolbar) toolbar.style.display = 'flex';
+    } else {
+        textarea.style.display = 'none';
+        preview.style.display = 'block';
+        if (toolbar) toolbar.style.display = 'none';
+        // Render preview
+        const md = textarea.value;
+        preview.innerHTML = renderMarkdownContent(md || '');
+        // Apply syntax highlighting to code blocks
+        if (typeof hljs !== 'undefined') {
+            preview.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        }
+    }
+};
+
+// Markdown toolbar insert helper
+window.mdInsert = (type, textareaId) => {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    textarea.focus();
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+
+    let insert = '';
+    let cursorOffset = 0;
+
+    switch(type) {
+        case 'heading':
+            insert = '## ' + (selected || 'Heading');
+            cursorOffset = selected ? insert.length : 3;
+            break;
+        case 'bold':
+            insert = '**' + (selected || 'bold text') + '**';
+            cursorOffset = selected ? insert.length : 2;
+            break;
+        case 'italic':
+            insert = '*' + (selected || 'italic text') + '*';
+            cursorOffset = selected ? insert.length : 1;
+            break;
+        case 'code':
+            insert = '`' + (selected || 'code') + '`';
+            cursorOffset = selected ? insert.length : 1;
+            break;
+        case 'codeblock':
+            insert = '```cpp\n' + (selected || '// code here') + '\n```';
+            cursorOffset = selected ? insert.length : 6;
+            break;
+        case 'ul':
+            insert = '\n- ' + (selected || 'item');
+            cursorOffset = insert.length;
+            break;
+        case 'ol':
+            insert = '\n1. ' + (selected || 'item');
+            cursorOffset = insert.length;
+            break;
+        case 'task':
+            insert = '\n- [ ] ' + (selected || 'task');
+            cursorOffset = insert.length;
+            break;
+        case 'link':
+            insert = '[' + (selected || 'link text') + '](url)';
+            cursorOffset = selected ? insert.length - 4 : 1;
+            break;
+        case 'blockquote':
+            insert = '> ' + (selected || 'quote');
+            cursorOffset = insert.length;
+            break;
+        case 'hr':
+            insert = '\n---\n';
+            cursorOffset = insert.length;
+            break;
+        case 'table':
+            insert = '\n| Header | Header |\n|--------|--------|\n| Cell   | Cell   |\n';
+            cursorOffset = insert.length;
+            break;
+    }
+
+    textarea.value = before + insert + after;
+    const newPos = start + cursorOffset;
+    textarea.selectionStart = newPos;
+    textarea.selectionEnd = selected ? newPos : start + insert.length;
+    textarea.dispatchEvent(new Event('input'));
+};
+
+// Keyboard shortcuts for markdown editor (Ctrl+B, Ctrl+I, etc.)
+function setupMdKeyboard(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    textarea.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+            switch(e.key.toLowerCase()) {
+                case 'b': e.preventDefault(); window.mdInsert('bold', textareaId); break;
+                case 'i': e.preventDefault(); window.mdInsert('italic', textareaId); break;
+                case 'k': e.preventDefault(); window.mdInsert('link', textareaId); break;
+            }
+        }
+        // Tab key inserts spaces instead of changing focus
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + '    ' + textarea.value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + 4;
+        }
+    });
+}
+
+/* =========================================
    MONACO EDITORS SETUP
    ========================================= */
 let monacoEditor = null;      // Problem Edit
@@ -113,6 +351,12 @@ window.formatDoc = (cmd, value = null) => {
     if (value) document.execCommand(cmd, false, value);
     else document.execCommand(cmd);
 };
+
+// Initialize paste handlers and keyboard shortcuts for both markdown textareas
+setupPasteHandler('problemTextNotes');
+setupPasteHandler('wikiTextNotes');
+setupMdKeyboard('problemTextNotes');
+setupMdKeyboard('wikiTextNotes');
 
 window.toggleLayout = (context) => {
     let container;
@@ -221,8 +465,9 @@ if (darkModeBtn) {
         updateMonacoTheme();
     };
 }
-enableAutoLinking('problemTextNotes');
-enableAutoLinking('wikiTextNotes');
+// Auto-linking is now handled by markdown rendering
+// enableAutoLinking('problemTextNotes');
+// enableAutoLinking('wikiTextNotes');
 
 document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
@@ -312,7 +557,7 @@ function saveProblemDraft() {
         problem: pEl.value,
         tags: tEl.value,
         difficulty: dEl ? dEl.value : "Medium",
-        notes: nEl ? nEl.innerHTML : "",
+        notes: nEl ? nEl.value : "",
         code: monacoEditor ? monacoEditor.getValue() : "",
         links: currentPracticeLinks
     };
@@ -327,7 +572,7 @@ function loadProblemDraft() {
         if (draft.problem && document.getElementById("problem")) document.getElementById("problem").value = draft.problem;
         if (draft.tags && document.getElementById("tags")) document.getElementById("tags").value = draft.tags;
         if (draft.difficulty && document.getElementById("difficulty")) document.getElementById("difficulty").value = draft.difficulty;
-        if (draft.notes && document.getElementById("problemTextNotes")) document.getElementById("problemTextNotes").innerHTML = draft.notes;
+        if (draft.notes && document.getElementById("problemTextNotes")) document.getElementById("problemTextNotes").value = draft.notes;
 
         if (draft.links) {
             currentPracticeLinks = draft.links;
@@ -356,7 +601,7 @@ function saveWikiDraft() {
     const draft = {
         topic: tEl.value,
         subtopic: sEl.value,
-        notes: nEl ? nEl.innerHTML : "",
+        notes: nEl ? nEl.value : "",
         code: wikiEditor ? wikiEditor.getValue() : ""
     };
     localStorage.setItem(DRAFT_KEY_WIKI, JSON.stringify(draft));
@@ -370,7 +615,7 @@ function loadWikiDraft() {
         const draft = JSON.parse(saved);
         if (draft.topic && document.getElementById("wikiTopic")) document.getElementById("wikiTopic").value = draft.topic;
         if (draft.subtopic && document.getElementById("wikiSubtopic")) document.getElementById("wikiSubtopic").value = draft.subtopic;
-        if (draft.notes && document.getElementById("wikiTextNotes")) document.getElementById("wikiTextNotes").innerHTML = draft.notes;
+        if (draft.notes && document.getElementById("wikiTextNotes")) document.getElementById("wikiTextNotes").value = draft.notes;
         if (wikiEditor && draft.code && draft.code !== "// Code implementation goes here...") {
             wikiEditor.setValue(draft.code);
         }
@@ -600,7 +845,7 @@ function toggleAddMode(show) {
             // 1. Clear fields FIRST
             document.getElementById("problem").value = "";
             document.getElementById("tags").value = "";
-            document.getElementById("problemTextNotes").innerHTML = "";
+            document.getElementById("problemTextNotes").value = "";
             currentPracticeLinks = [];
             renderPracticeLinksPreview();
 
@@ -638,7 +883,9 @@ window.closeProblemModal = () => {
     // 3. Clear Inputs (Draft logic ignores this because display is none)
     document.getElementById("problem").value = "";
     document.getElementById("tags").value = "";
-    document.getElementById("problemTextNotes").innerHTML = "";
+    document.getElementById("problemTextNotes").value = "";
+    // Reset markdown tab to write mode
+    switchMdTab('write', 'problem');
     document.querySelectorAll('.error-text').forEach(e => e.remove());
     document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error'));
 
@@ -758,7 +1005,8 @@ if (saveBtn) {
         };
 
         const userData = {
-            conceptNotes: notesInput.innerHTML,
+            conceptNotes: notesInput.value,
+            notesFormat: "markdown",
             code: getMonacoValue(),
             updatedAt: new Date().toISOString()
         };
@@ -979,9 +1227,12 @@ window.viewWikiNote = (note) => {
     document.getElementById("popupWikiTopic").textContent = note.topic || "Uncategorized";
     document.getElementById("popupWikiTitle").textContent = note.subtopic || "Untitled Note";
 
-    let noteContent = note.textNotes || "<p style='color:#666; font-style:italic;'>No notes added.</p>";
-    noteContent = noteContent.replace(/<a /g, '<a target="_blank" ');
+    const noteContent = renderMarkdownContent(note.textNotes);
     document.getElementById("popupWikiNotes").innerHTML = noteContent;
+    // Highlight code blocks
+    if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('#popupWikiNotes pre code').forEach(block => hljs.highlightElement(block));
+    }
 
     if (wikiPopupEditor) {
         const code = note.code ?? note.content ?? "// No code saved.";
@@ -1006,7 +1257,11 @@ window.editCurrentWiki = () => {
 
     document.getElementById('wikiTopic').value = note.topic || "";
     document.getElementById('wikiSubtopic').value = note.subtopic || "";
-    document.getElementById('wikiTextNotes').innerHTML = note.textNotes || "";
+    // Load notes into textarea: convert HTML to markdown for legacy notes
+    const rawNotes = note.textNotes || '';
+    document.getElementById('wikiTextNotes').value = isHtmlContent(rawNotes) ? htmlToMarkdown(rawNotes) : rawNotes;
+    // Reset to write tab
+    switchMdTab('write', 'wiki');
 
     if (wikiEditor) {
         const code = note.code ?? note.content ?? "";
@@ -1027,7 +1282,9 @@ window.createNewNote = () => {
 
     document.getElementById('wikiTopic').value = "";
     document.getElementById('wikiSubtopic').value = "";
-    document.getElementById('wikiTextNotes').innerHTML = "";
+    document.getElementById('wikiTextNotes').value = "";
+    // Reset to write tab
+    switchMdTab('write', 'wiki');
 
     // NEW: Load Draft for Wiki
     loadWikiDraft();
@@ -1050,12 +1307,12 @@ window.saveWikiNote = async () => {
 
     const topic = document.getElementById('wikiTopic').value.trim();
     const subtopic = document.getElementById('wikiSubtopic').value.trim();
-    const textNotes = document.getElementById('wikiTextNotes').innerHTML;
+    const textNotes = document.getElementById('wikiTextNotes').value;
     const codeContent = wikiEditor ? wikiEditor.getValue() : "";
 
     const data = {
         topic: topic, subtopic: subtopic, title: subtopic,
-        textNotes: textNotes, code: codeContent, updatedAt: new Date().toISOString()
+        textNotes: textNotes, code: codeContent, format: "markdown", updatedAt: new Date().toISOString()
     };
 
     try {
@@ -1284,9 +1541,12 @@ window.viewNote = (id) => {
     const codePanel = document.getElementById('modalCodePanel');
     if (notePanel) notePanel.classList.remove('collapsed');
     if (codePanel) codePanel.classList.remove('collapsed');
-    let noteContent = p.conceptNotes || "<p style='color:#666; font-style:italic;'>No concept notes added.</p>";
-    noteContent = noteContent.replace(/<a /g, '<a target="_blank" ');
+    const noteContent = renderMarkdownContent(p.conceptNotes);
     document.getElementById("modalTextDisplay").innerHTML = noteContent;
+    // Highlight code blocks
+    if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('#modalTextDisplay pre code').forEach(block => hljs.highlightElement(block));
+    }
     if (monacoModalEditor) {
         const codeContent = p.code ?? p.notes ?? "// No implementation code saved.";
         monacoModalEditor.setValue(codeContent);
@@ -1317,7 +1577,11 @@ window.editProblem = (id) => {
     const globalCheck = document.getElementById("adminGlobalCheck");
     if (globalCheck) globalCheck.style.display = "none";
     document.getElementById("tags").value = (p.tags || []).join(", ");
-    document.getElementById("problemTextNotes").innerHTML = p.conceptNotes || "";
+    // Load notes into textarea: convert HTML to markdown for legacy notes
+    const rawNotes = p.conceptNotes || '';
+    document.getElementById("problemTextNotes").value = isHtmlContent(rawNotes) ? htmlToMarkdown(rawNotes) : rawNotes;
+    // Reset to write tab
+    switchMdTab('write', 'problem');
 
     currentPracticeLinks = p.practiceLinks || [];
     renderPracticeLinksPreview();
