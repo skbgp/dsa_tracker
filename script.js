@@ -27,7 +27,22 @@ const DRAFT_KEY_WIKI = "dsa_tracker_wiki_draft";
    MARKDOWN SETUP (marked.js + highlight.js)
    ========================================= */
 try {
+    // Configure mermaid
+    if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: false, theme: document.body.classList.contains('dark') ? 'dark' : 'default' });
+    }
+
+    const renderer = new marked.Renderer();
+    const originalCodeRenderer = renderer.code.bind(renderer);
+    renderer.code = function(code, language, isEscaped) {
+        if (language === 'mermaid') {
+            return '<div class="mermaid">' + code + '</div>';
+        }
+        return originalCodeRenderer(code, language, isEscaped);
+    };
+
     marked.setOptions({
+        renderer: renderer,
         breaks: true,
         gfm: true,
         highlight: function(code, lang) {
@@ -40,7 +55,7 @@ try {
             return code;
         }
     });
-} catch(e) { console.warn('marked init:', e); }
+} catch(e) { console.warn('marked/mermaid init:', e); }
 
 // Detect if content is HTML (legacy notes) vs markdown
 function isHtmlContent(text) {
@@ -161,6 +176,12 @@ window.switchMdTab = (tab, context) => {
             preview.querySelectorAll('pre code').forEach(block => {
                 hljs.highlightElement(block);
             });
+        }
+        // Render mermaid diagrams
+        if (typeof mermaid !== 'undefined') {
+            try {
+                mermaid.run({ nodes: preview.querySelectorAll('.mermaid') });
+            } catch(e) { console.warn('Mermaid render error:', e); }
         }
     }
 };
@@ -357,6 +378,29 @@ setupPasteHandler('problemTextNotes');
 setupPasteHandler('wikiTextNotes');
 setupMdKeyboard('problemTextNotes');
 setupMdKeyboard('wikiTextNotes');
+
+window.toggleFullScreen = (modalId) => {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    modal.classList.toggle('fullscreen');
+    
+    // Toggle the icon
+    const btn = modal.querySelector('button[title="Full Screen"], button[title="Exit Full Screen"]');
+    if (btn) {
+        const icon = btn.querySelector('i');
+        if (modal.classList.contains('fullscreen')) {
+            if (icon) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+            btn.title = 'Exit Full Screen';
+        } else {
+            if (icon) { icon.classList.remove('fa-compress'); icon.classList.add('fa-expand'); }
+            btn.title = 'Full Screen';
+        }
+    }
+    
+    // Refresh monaco editors
+    const editors = [monacoEditor, monacoModalEditor, wikiEditor, wikiPopupEditor];
+    editors.forEach(ed => { if (ed) setTimeout(() => ed.layout(), 50); });
+};
 
 window.toggleLayout = (context) => {
     let container;
@@ -1233,6 +1277,12 @@ window.viewWikiNote = (note) => {
     if (typeof hljs !== 'undefined') {
         document.querySelectorAll('#popupWikiNotes pre code').forEach(block => hljs.highlightElement(block));
     }
+    // Render mermaid diagrams
+    if (typeof mermaid !== 'undefined') {
+        try {
+            mermaid.run({ nodes: document.querySelectorAll('#popupWikiNotes .mermaid') });
+        } catch(e) { console.warn('Mermaid render error:', e); }
+    }
 
     if (wikiPopupEditor) {
         const code = note.code ?? note.content ?? "// No code saved.";
@@ -1546,6 +1596,12 @@ window.viewNote = (id) => {
     // Highlight code blocks
     if (typeof hljs !== 'undefined') {
         document.querySelectorAll('#modalTextDisplay pre code').forEach(block => hljs.highlightElement(block));
+    }
+    // Render mermaid diagrams
+    if (typeof mermaid !== 'undefined') {
+        try {
+            mermaid.run({ nodes: document.querySelectorAll('#modalTextDisplay .mermaid') });
+        } catch(e) { console.warn('Mermaid render error:', e); }
     }
     if (monacoModalEditor) {
         const codeContent = p.code ?? p.notes ?? "// No implementation code saved.";

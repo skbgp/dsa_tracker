@@ -379,7 +379,9 @@ tr:not(.tag-group-header):hover td { background: #f0f7ff; }
 
 /* MODAL STYLING */
 .note-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; padding: 15px; backdrop-filter: blur(2px); }
-.note-modal-content { background: white; padding: 25px; width: 95%; max-width: 1400px; height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+.note-modal-content { background: white; padding: 25px; width: 95%; max-width: 1400px; height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.2); transition: all 0.2s ease-out; }
+.note-modal.fullscreen { padding: 0; }
+.note-modal.fullscreen .note-modal-content { width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; border: none; }
 .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
 /* =========================================

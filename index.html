@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
 </head>
 <body>
@@ -302,6 +303,9 @@ int main() {}
             <div class="modal-header-row">
                 <h3 style="margin:0;">Problem Details</h3>
                 <div style="display:flex; gap:10px;">
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleFullScreen('noteModal')" title="Full Screen">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
                     <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('noteModal')" title="Layout">
                         <i class="fa-solid fa-table-columns"></i>
                     </button>
@@ -345,6 +349,9 @@ int main() {}
                     <button onclick="editWikiFromPopup()" class="primary-btn small-btn"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                     <button onclick="deleteWikiFromPopup()" class="danger-btn small-btn"><i class="fa-solid fa-trash"></i></button>
                     <div style="width:1px; height:20px; background:#ccc; margin:0 5px;"></div>
+                    <button type="button" class="secondary-btn small-btn" onclick="toggleFullScreen('wikiModal')" title="Full Screen">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
                     <button type="button" class="secondary-btn small-btn" onclick="toggleLayout('wikiModal')" title="Layout">
                         <i class="fa-solid fa-table-columns"></i>
                     </button>
